@@ -87,18 +87,6 @@
             max-width: 900px; width: 100%;
         }
 
-        /* Input mode tabs */
-        .input-tabs {
-            display: flex; gap: 6px; margin-bottom: 16px;
-            background: #f3f4f6; border-radius: 12px; padding: 4px;
-        }
-        .input-tab {
-            flex: 1; padding: 8px 12px; border: none; border-radius: 10px;
-            background: transparent; font-family: inherit; font-size: 0.9rem; font-weight: 600;
-            cursor: pointer; transition: all 0.2s; color: #6b7280;
-        }
-        .input-tab.active { background: white; color: #7c3aed; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-
         /* Caller display row */
         .caller-row {
             display: flex; align-items: center; justify-content: center; gap: 16px;
@@ -132,26 +120,27 @@
         /* Voice panel */
         .voice-panel { display: flex; flex-direction: column; align-items: center; gap: 12px; }
 
-        .mic-button {
+        .randomize-button {
             width: 72px; height: 72px; border-radius: 50%; border: none;
-            background: linear-gradient(135deg, #ef4444, #f97316);
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
             color: white; font-size: 2rem; cursor: pointer;
-            transition: all 0.2s; box-shadow: 0 4px 15px rgba(239,68,68,0.35);
+            transition: all 0.2s; box-shadow: 0 4px 15px rgba(124,58,237,0.35);
             display: flex; align-items: center; justify-content: center;
-            position: relative;
         }
-        .mic-button:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(239,68,68,0.45); }
-        .mic-button:active { transform: scale(0.97); }
-        .mic-button.listening {
-            animation: micPulse 1.2s ease-in-out infinite;
-            background: linear-gradient(135deg, #dc2626, #ef4444);
-        }
-        .mic-button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; animation: none; }
+        .randomize-button:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(124,58,237,0.45); }
+        .randomize-button:active { transform: scale(0.97); }
+        .randomize-button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
-        @keyframes micPulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4), 0 4px 15px rgba(239,68,68,0.35); }
-            50% { box-shadow: 0 0 0 14px rgba(239,68,68,0), 0 4px 15px rgba(239,68,68,0.35); }
+        .replay-button {
+            padding: 10px 20px; border: none; border-radius: 12px;
+            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+            color: white; font-family: inherit; font-size: 0.95rem; font-weight: 700;
+            cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 12px rgba(245,158,11,0.3);
+            animation: popIn 0.3s ease-out;
         }
+        .replay-button:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(245,158,11,0.4); }
+        .replay-button:active { transform: translateY(0); }
 
         .reveal-button {
             padding: 10px 28px; border: none; border-radius: 12px;
@@ -170,30 +159,6 @@
         }
         .voice-status.error { color: #ef4444; }
         .voice-status.success { color: #059669; }
-
-        .no-speech-warning {
-            background: #fef3c7; border: 1px solid #f59e0b; border-radius: 10px;
-            padding: 10px 14px; font-size: 0.85rem; color: #92400e; text-align: center;
-        }
-
-        /* Manual picker panel */
-        .manual-panel { display: flex; flex-direction: column; gap: 10px; }
-        .picker-label { font-size: 0.85rem; font-weight: 600; color: #9ca3af; }
-
-        .char-picker-grid {
-            display: flex; flex-wrap: wrap; gap: 5px; justify-content: center;
-            max-height: 180px; overflow-y: auto; padding: 4px;
-        }
-        .picker-btn {
-            width: 48px; height: 42px; border-radius: 8px; border: 2px solid #e5e7eb;
-            background: white; font-family: inherit; font-size: 0.95rem; font-weight: 700;
-            cursor: pointer; transition: all 0.15s; display: flex; align-items: center;
-            justify-content: center; line-height: 1;
-        }
-        .picker-btn:hover:not(.called) { border-color: #7c3aed; background: #f5f3ff; transform: scale(1.08); }
-        .picker-btn.called { opacity: 0.25; cursor: not-allowed; background: #f3f4f6; text-decoration: line-through; }
-        .picker-btn.consonant-btn { color: #6d28d9; }
-        .picker-btn.vowel-btn { color: #be185d; }
 
         /* Called history */
         .called-history-section { border-top: 1px solid #f3f4f6; padding-top: 10px; }
@@ -336,8 +301,7 @@
             .cell { font-size: 0.9rem; border-radius: 6px; }
             .caller-current { width: 72px; height: 72px; }
             .caller-current span { font-size: 1.6rem; }
-            .mic-button { width: 60px; height: 60px; font-size: 1.6rem; }
-            .picker-btn { width: 40px; height: 36px; font-size: 0.85rem; }
+            .randomize-button { width: 60px; height: 60px; font-size: 1.6rem; }
         }
     </style>
 </head>
@@ -376,28 +340,15 @@
 <!-- ====== GAME SCREEN ====== -->
 <div id="game-screen" class="screen hidden">
     <div class="caller-section">
-        <!-- Input mode tabs -->
-        <div class="input-tabs">
-            <button class="input-tab active" id="tab-voice" onclick="setInputMode('voice')">🎤 พูด</button>
-            <button class="input-tab" id="tab-manual" onclick="setInputMode('manual')">📋 เลือกเอง</button>
-        </div>
-
-        <!-- Caller display row -->
         <div class="caller-row">
-            <!-- Voice input panel -->
-            <div id="voice-panel" class="voice-panel">
-                <div id="no-speech-warning" class="no-speech-warning hidden">
-                    เบราว์เซอร์นี้ไม่รองรับการรับเสียง กรุณาใช้โหมด "เลือกเอง"
+            <!-- Calling controls -->
+            <div class="voice-panel">
+                <button class="randomize-button" id="random-btn" onclick="randomizeChar()">🎲</button>
+                <div style="display:flex; gap:8px;">
+                    <button class="replay-button hidden" id="replay-btn" onclick="replayChar()">🔊 ฟังอีกครั้ง</button>
+                    <button class="reveal-button hidden" id="reveal-btn" onclick="revealChar()">เฉลย</button>
                 </div>
-                <button class="mic-button" id="mic-btn" onclick="toggleMic()">🎤</button>
-                <button class="reveal-button hidden" id="reveal-btn" onclick="revealChar()">เฉลย</button>
-                <div class="voice-status" id="voice-status">กดเพื่อฟัง</div>
-            </div>
-
-            <!-- Manual input panel (hidden by default) -->
-            <div id="manual-panel" class="manual-panel hidden">
-                <div class="picker-label">กดตัวอักษรที่ต้องการเรียก:</div>
-                <div class="char-picker-grid" id="char-picker"></div>
+                <div class="voice-status" id="voice-status">กดสุ่มเพื่อเริ่ม</div>
             </div>
 
             <!-- Current character display -->
@@ -411,7 +362,6 @@
             </div>
         </div>
 
-        <!-- Called history -->
         <div class="called-history-section">
             <div class="called-history" id="called-history"></div>
         </div>
@@ -546,7 +496,6 @@ let state = {
     playerCount: 2,
     mode: 'mixed',
     hintsOn: true,
-    inputMode: 'voice',
     players: [],
     boards: [],
     gamePool: [],
@@ -555,10 +504,6 @@ let state = {
     gameActive: false,
     winners: [],
     confettiId: null,
-    isListening: false,
-    recognition: null,
-    speechSupported: false,
-    lastHeard: null,
     pendingChar: null,
     pendingSelections: {},
 };
@@ -600,138 +545,62 @@ function shuffle(arr) {
 function isVowel(ch) { return VOWELS.includes(ch); }
 
 // ============================================================
-// SPEECH RECOGNITION
+// TTS & RANDOMIZE
 // ============================================================
-function initSpeechRecognition() {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) {
-        state.speechSupported = false;
+function getCharSpokenName(char) {
+    for (const [ch, keywords] of ALL_SPEECH) {
+        if (ch === char) return keywords[0];
+    }
+    return char;
+}
+
+function speakChar(char) {
+    speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(getCharSpokenName(char));
+    utter.lang = 'th-TH';
+    utter.rate = 0.9;
+    speechSynthesis.speak(utter);
+}
+
+function randomizeChar() {
+    if (!state.gameActive) return;
+    ensureAudio();
+
+    const remaining = state.gamePool.filter(ch => !state.calledChars.includes(ch));
+    if (remaining.length === 0) {
+        setVoiceStatus('หมดตัวอักษรแล้ว', 'error');
+        document.getElementById('random-btn').disabled = true;
         return;
     }
-    state.speechSupported = true;
-    const recognition = new SR();
-    recognition.lang = 'th-TH';
-    recognition.continuous = false;
-    recognition.interimResults = true;
-    recognition.maxAlternatives = 5;
 
-    recognition.onresult = (event) => {
-        const result = event.results[0];
+    const char = remaining[Math.floor(Math.random() * remaining.length)];
+    state.pendingChar = char;
 
-        // Collect all alternatives from current result
-        const alternatives = [];
-        for (let i = 0; i < result.length; i++) {
-            alternatives.push(result[i].transcript.trim());
-        }
+    // Show "?" while pending
+    const charEl = document.getElementById('current-char');
+    const display = document.getElementById('caller-display');
+    charEl.textContent = '?';
+    display.classList.remove('has-char');
 
-        // Log what was heard to console only
-        const heardText = alternatives.map((a, i) => (i + 1) + ': ' + a).join(' | ');
-        console.log(result.isFinal ? '[final]' : '[interim]', heardText);
+    speakChar(char);
 
-        // Save last heard for fallback in onend
-        state.lastHeard = alternatives;
-
-        // Only process matching on final result
-        if (!result.isFinal) return;
-
-        state.isListening = false;
-        updateMicUI();
-        processHeard(alternatives);
-    };
-
-    recognition.onerror = (event) => {
-        state.isListening = false;
-        updateMicUI();
-        setBoardsVisible(true);
-        if (event.error === 'no-speech') {
-            setVoiceStatus('ไม่ได้ยินเสียง ลองอีกครั้ง', 'error');
-        } else if (event.error === 'not-allowed') {
-            setVoiceStatus('กรุณาอนุญาตไมโครโฟน', 'error');
-        } else {
-            setVoiceStatus('เกิดข้อผิดพลาด ลองอีกครั้ง', 'error');
-        }
-    };
-
-    recognition.onend = () => {
-        if (state.isListening) {
-            // Session ended without a final result — use last interim
-            if (state.lastHeard && state.lastHeard.length > 0) {
-                console.log('[interim fallback]', state.lastHeard[0]);
-                processHeard(state.lastHeard);
-            } else {
-                console.log('[no result received]');
-                setBoardsVisible(true);
-                setVoiceStatus('ไม่ได้รับผล ลองอีกครั้ง', 'error');
-            }
-        }
-        state.isListening = false;
-        state.lastHeard = null;
-        updateMicUI();
-    };
-
-    state.recognition = recognition;
+    document.getElementById('random-btn').disabled = true;
+    document.getElementById('replay-btn').classList.remove('hidden');
+    document.getElementById('reveal-btn').classList.remove('hidden');
+    setVoiceStatus('กด เฉลย เพื่อเปิด หรือ ฟังอีกครั้ง', '');
 }
 
-function matchSpeechToChar(text) {
-    const clean = text.replace(/\s+/g, '');
-
-    // 1. Direct single-character match (for consonants only)
-    if (clean.length === 1 && CONSONANTS.includes(clean)) return clean;
-
-    // 2. Keyword matching — prefer longest match
-    let bestChar = null;
-    let bestLen = 0;
-
-    for (const [char, keywords] of ALL_SPEECH) {
-        for (const kw of keywords) {
-            const kwClean = kw.replace(/\s+/g, '');
-            if (clean.includes(kwClean) && kwClean.length > bestLen) {
-                bestChar = char;
-                bestLen = kwClean.length;
-            }
-        }
-    }
-    if (bestChar) return bestChar;
-
-    // 3. Fuzzy: first Thai character in the recognized text might be the consonant
-    for (let i = 0; i < clean.length; i++) {
-        if (CONSONANTS.includes(clean[i])) {
-            return clean[i];
-        }
-    }
-
-    return null;
-}
-
-function processHeard(alternatives) {
-    let matched = null;
-    for (const alt of alternatives) {
-        matched = matchSpeechToChar(alt);
-        if (matched) break;
-    }
-
-    if (matched) {
-        if (state.calledChars.includes(matched)) {
-            setBoardsVisible(true);
-            setVoiceStatus('ถูกเรียกแล้ว! ลองตัวอื่น', 'error');
-        } else {
-            state.pendingChar = matched;
-            console.log('[matched]', matched);
-            setBoardsVisible(true);
-            setVoiceStatus('รับแล้ว! กด "เฉลย" เพื่อเปิด', 'success');
-            document.getElementById('reveal-btn').classList.remove('hidden');
-        }
-    } else {
-        setBoardsVisible(true);
-        setVoiceStatus('ไม่เข้าใจ ลองพูดอีกครั้ง', 'error');
-    }
+function replayChar() {
+    if (state.pendingChar) speakChar(state.pendingChar);
 }
 
 function revealChar() {
     if (!state.pendingChar) return;
+    speechSynthesis.cancel();
     const char = state.pendingChar;
     state.pendingChar = null;
     document.getElementById('reveal-btn').classList.add('hidden');
+    document.getElementById('replay-btn').classList.add('hidden');
     callCharacter(char);
 
     // Validate pending selections
@@ -752,42 +621,14 @@ function revealChar() {
         }
     }
 
-    if (state.gamePool.includes(char)) {
-        setVoiceStatus('✓ กดฟังเมื่อพร้อม', 'success');
+    // Re-enable randomize if pool not exhausted
+    const remaining = state.gamePool.filter(ch => !state.calledChars.includes(ch));
+    if (remaining.length > 0) {
+        document.getElementById('random-btn').disabled = false;
+        setVoiceStatus('กดสุ่มเพื่อเรียกตัวถัดไป', 'success');
     } else {
-        setVoiceStatus('✓ ' + char + ' — ไม่มีในกระดาน', '');
-    }
-}
-
-function toggleMic() {
-    if (!state.speechSupported || !state.gameActive) return;
-    ensureAudio();
-
-    if (state.isListening) {
-        state.recognition.stop();
-    } else {
-        try {
-            state.recognition.start();
-            state.isListening = true;
-            updateMicUI();
-            setBoardsVisible(false);
-            setVoiceStatus('กำลังฟัง...', '');
-        } catch (e) {
-            setVoiceStatus('ลองอีกครั้ง', 'error');
-        }
-    }
-}
-
-function setBoardsVisible(visible) {
-    document.getElementById('boards-container').classList.toggle('hidden', !visible);
-}
-
-function updateMicUI() {
-    const btn = document.getElementById('mic-btn');
-    if (state.isListening) {
-        btn.classList.add('listening');
-    } else {
-        btn.classList.remove('listening');
+        document.getElementById('random-btn').disabled = true;
+        setVoiceStatus('หมดตัวอักษรแล้ว', '');
     }
 }
 
@@ -798,27 +639,7 @@ function setVoiceStatus(text, type) {
 }
 
 // ============================================================
-// INPUT MODE
-// ============================================================
-function setInputMode(mode) {
-    state.inputMode = mode;
-
-    document.getElementById('tab-voice').className = 'input-tab' + (mode === 'voice' ? ' active' : '');
-    document.getElementById('tab-manual').className = 'input-tab' + (mode === 'manual' ? ' active' : '');
-
-    document.getElementById('voice-panel').classList.toggle('hidden', mode !== 'voice');
-    document.getElementById('manual-panel').classList.toggle('hidden', mode !== 'manual');
-
-    // Stop listening if switching away from voice
-    if (mode !== 'voice' && state.isListening && state.recognition) {
-        state.recognition.abort();
-        state.isListening = false;
-        updateMicUI();
-    }
-}
-
-// ============================================================
-// CHARACTER CALLING (shared by voice & manual)
+// CHARACTER CALLING
 // ============================================================
 function callCharacter(char) {
     if (!state.gameActive) return;
@@ -839,15 +660,7 @@ function callCharacter(char) {
 
     document.getElementById('draw-count').textContent = state.calledChars.length;
     renderCalledHistory();
-    renderCharPicker(); // update grayed-out state
     updateHints();
-}
-
-// Called from manual picker
-function pickChar(char) {
-    if (!state.gameActive) return;
-    if (state.calledChars.includes(char)) return;
-    callCharacter(char);
 }
 
 // ============================================================
@@ -927,26 +740,16 @@ function startGame() {
         state.boards.push(generateBoard(state.gamePool));
     }
 
-    // Speech
-    if (!state.recognition) initSpeechRecognition();
-
-    // Show/hide speech warning
-    if (!state.speechSupported) {
-        document.getElementById('no-speech-warning').classList.remove('hidden');
-        document.getElementById('mic-btn').disabled = true;
-        setInputMode('manual');
-    } else {
-        document.getElementById('no-speech-warning').classList.add('hidden');
-        document.getElementById('mic-btn').disabled = false;
-    }
-
     renderGame();
     document.getElementById('setup-screen').classList.add('hidden');
     document.getElementById('game-screen').classList.remove('hidden');
     document.getElementById('win-overlay').classList.add('hidden');
 
-    setVoiceStatus('กดเพื่อฟัง', '');
-    document.getElementById('voice-heard').textContent = '';
+    // Reset randomize/replay/reveal button states
+    document.getElementById('random-btn').disabled = false;
+    document.getElementById('replay-btn').classList.add('hidden');
+    document.getElementById('reveal-btn').classList.add('hidden');
+    setVoiceStatus('กดสุ่มเพื่อเริ่ม', '');
 }
 
 function generateBoard(pool) {
@@ -980,7 +783,6 @@ function renderGame() {
     else display.classList.remove('has-char');
 
     renderCalledHistory();
-    renderCharPicker();
     renderBoards();
 }
 
@@ -994,32 +796,6 @@ function renderCalledHistory() {
         container.appendChild(chip);
     });
     container.scrollTop = container.scrollHeight;
-}
-
-function renderCharPicker() {
-    const container = document.getElementById('char-picker');
-    container.innerHTML = '';
-
-    // Show only characters in the game pool, consonants first, then vowels
-    const consonantsInPool = state.gamePool.filter(c => CONSONANTS.includes(c));
-    const vowelsInPool = state.gamePool.filter(c => VOWELS.includes(c));
-    const ordered = [...consonantsInPool.sort((a, b) => CONSONANTS.indexOf(a) - CONSONANTS.indexOf(b)),
-                     ...vowelsInPool.sort((a, b) => VOWELS.indexOf(a) - VOWELS.indexOf(b))];
-
-    ordered.forEach(ch => {
-        const btn = document.createElement('button');
-        btn.className = 'picker-btn' + (isVowel(ch) ? ' vowel-btn' : ' consonant-btn');
-        btn.textContent = ch;
-
-        if (state.calledChars.includes(ch)) {
-            btn.classList.add('called');
-            btn.disabled = true;
-        } else {
-            btn.onclick = () => pickChar(ch);
-        }
-
-        container.appendChild(btn);
-    });
 }
 
 function renderBoards() {
@@ -1167,7 +943,7 @@ function highlightWinLine(pi, line) {
 function showWin(pi) {
     sfxWin();
     state.gameActive = false;
-    if (state.isListening && state.recognition) { state.recognition.abort(); state.isListening = false; updateMicUI(); }
+    speechSynthesis.cancel();
     document.getElementById('winner-name').textContent = state.players[pi];
     document.getElementById('win-overlay').classList.remove('hidden');
     startConfetti();
@@ -1181,14 +957,14 @@ function continueAfterWin() {
 
 function resetGame() {
     stopConfetti();
-    if (state.isListening && state.recognition) { state.recognition.abort(); state.isListening = false; updateMicUI(); }
+    speechSynthesis.cancel();
     document.getElementById('win-overlay').classList.add('hidden');
     startGame();
 }
 
 function backToSetup() {
     stopConfetti();
-    if (state.isListening && state.recognition) { state.recognition.abort(); state.isListening = false; updateMicUI(); }
+    speechSynthesis.cancel();
     document.getElementById('win-overlay').classList.add('hidden');
     document.getElementById('game-screen').classList.add('hidden');
     document.getElementById('setup-screen').classList.remove('hidden');
@@ -1239,7 +1015,6 @@ function stopConfetti() {
 // INIT
 // ============================================================
 initSetup();
-initSpeechRecognition();
 </script>
 </body>
 </html>

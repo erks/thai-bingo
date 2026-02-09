@@ -37,3 +37,7 @@ Everything is in one `index.html` file with three inline sections:
 - Player boards are color-coded using CSS vars (`--p1` blue, `--p2` pink, `--p3` green, `--p4` orange)
 - Sound effects use Web Audio API (`playTone()`) — no audio files
 - All UI text is in Thai
+
+## Git
+
+- Do not add `Co-Authored-By` lines to commits
