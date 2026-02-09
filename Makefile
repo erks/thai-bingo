@@ -1,10 +1,17 @@
-.PHONY: dev client worker install clean
+.PHONY: fmt dev client worker install clean
+
+.DEFAULT_GOAL := fmt
 
 CLIENT_PORT ?= 3000
 WORKER_PORT ?= 8787
 
+# Lint and type-check the codebase
+fmt: install
+	@echo "Type-checking worker..."
+	@cd worker && npm exec tsc -- --noEmit
+
 # Start both client and worker; Ctrl+C stops everything
-dev:
+dev: install
 	@echo "Starting client on http://localhost:$(CLIENT_PORT) and worker on http://localhost:$(WORKER_PORT)..."
 	@pids=""; \
 	trap 'kill $$pids 2>/dev/null; sleep 0.3; kill -9 $$pids 2>/dev/null; exit 0' INT TERM; \
@@ -17,7 +24,7 @@ client:
 	python3 -m http.server $(CLIENT_PORT) -b 127.0.0.1
 
 # Start only the Cloudflare Worker locally
-worker:
+worker: install
 	cd worker && npx wrangler dev --port $(WORKER_PORT)
 
 # Install worker dependencies
