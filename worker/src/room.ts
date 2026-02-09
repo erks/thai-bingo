@@ -63,7 +63,7 @@ interface RoomState {
 
 type ClientMessage =
   | { type: "join"; name: string }
-  | { type: "start" }
+  | { type: "start"; moderatorPlaying?: boolean }
   | { type: "randomize" }
   | { type: "replay" }
   | { type: "reveal" }
@@ -273,7 +273,7 @@ export class BingoRoom implements DurableObject {
 
     switch (data.type) {
       case "start":
-        await this.handleStart(senderId, senderRole);
+        await this.handleStart(senderId, senderRole, data.moderatorPlaying);
         break;
       case "randomize":
         await this.handleRandomize(senderId, senderRole);
@@ -334,10 +334,15 @@ export class BingoRoom implements DurableObject {
 
   // --- Game logic handlers ---
 
-  private async handleStart(senderId: string, senderRole: string): Promise<void> {
+  private async handleStart(senderId: string, senderRole: string, moderatorPlaying?: boolean): Promise<void> {
     if (!this.room) return;
     if (senderRole !== "moderator" || senderId !== this.room.moderatorId) return;
     if (this.room.phase !== "lobby") return;
+
+    // Update moderatorPlaying from client if provided
+    if (moderatorPlaying !== undefined) {
+      this.room.moderatorPlaying = moderatorPlaying;
+    }
 
     const minPlayers = this.room.moderatorPlaying ? CONFIG.minPlayersModeratorPlaying : CONFIG.minPlayersDefault;
     if (this.room.players.length < minPlayers) {

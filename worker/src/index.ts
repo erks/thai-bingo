@@ -16,9 +16,8 @@ const ALLOWED_ORIGINS = [
   "https://erks.github.io",
   "http://localhost:8787",
   "http://localhost:3000",
-  "http://localhost:8000",
   "http://127.0.0.1:8787",
-  "http://127.0.0.1:8000",
+  "http://127.0.0.1:3000",
   "null", // file:// origin
 ];
 

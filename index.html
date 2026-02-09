@@ -337,6 +337,21 @@
         .player-list {
             text-align: left; margin: 16px 0; min-height: 40px;
         }
+        .moderator-play-toggle {
+            display: flex; align-items: center; justify-content: center; gap: 12px;
+            padding: 14px 20px; border-radius: 14px; border: 2px solid #e5e7eb;
+            background: white; margin: 16px 0; cursor: pointer;
+            transition: all 0.2s; user-select: none;
+        }
+        .moderator-play-toggle:hover { border-color: #a78bfa; background: #f5f3ff; }
+        .moderator-play-toggle.active { border-color: #7c3aed; background: #ede9fe; }
+        .moderator-play-toggle input[type="checkbox"] {
+            width: 22px; height: 22px; accent-color: #7c3aed; cursor: pointer;
+        }
+        .moderator-play-toggle label {
+            font-size: 1.05rem; font-weight: 700; color: #4b5563; cursor: pointer; margin: 0;
+        }
+        .moderator-play-toggle.active label { color: #7c3aed; }
         .player-list-item {
             display: flex; align-items: center; gap: 10px; padding: 8px 12px;
             border-radius: 10px; animation: chipIn 0.3s ease-out; margin-bottom: 4px;
@@ -448,6 +463,10 @@
         <div class="share-link-row" id="share-link-row">
             <input type="text" id="share-link-input" readonly>
             <button class="copy-btn" id="copy-link-btn" onclick="copyShareLink()"></button>
+        </div>
+        <div class="moderator-play-toggle hidden" id="moderator-play-toggle" onclick="toggleModeratorPlaying(event)">
+            <input type="checkbox" id="lobby-moderator-plays">
+            <label for="lobby-moderator-plays" data-i18n="moderatorPlays">I'm playing too</label>
         </div>
         <div class="player-list" id="lobby-player-list"></div>
         <button class="start-button" id="lobby-start-btn" onclick="onlineStartGame()" disabled></button>
@@ -729,6 +748,16 @@ let audioCtx = null;
 function ensureAudio() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === 'suspended') audioCtx.resume();
+    // Play a silent tone to unlock audio
+    if (audioCtx.currentTime < 0.1) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        gain.gain.value = 0.001; // Almost silent
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.01);
+    }
 }
 function playTone(freq, dur, vol = 0.2, type = 'sine') {
     ensureAudio();
@@ -813,7 +842,16 @@ function speakChar(char) {
     const key = CHAR_AUDIO_KEY[char];
     if (key && typeof AUDIO_DATA !== 'undefined' && AUDIO_DATA.has(key)) {
         charVoiceover = new Audio('data:audio/mpeg;base64,' + AUDIO_DATA.get(key));
-        charVoiceover.play();
+        charVoiceover.play().catch(err => {
+            console.log('Audio playback blocked, falling back to speech synthesis:', err);
+            // Fallback to speech synthesis
+            if (CHAR_TTS[char]) {
+                const utt = new SpeechSynthesisUtterance(CHAR_TTS[char]);
+                utt.lang = 'th-TH';
+                utt.rate = 0.85;
+                window.speechSynthesis.speak(utt);
+            }
+        });
     } else if (CHAR_TTS[char]) {
         const utt = new SpeechSynthesisUtterance(CHAR_TTS[char]);
         utt.lang = 'th-TH';
@@ -1075,23 +1113,9 @@ function renderOnlineSetup() {
         nameDiv.appendChild(nameInput);
         section.appendChild(nameDiv);
 
-        // "I'm playing too" checkbox
-        const playDiv = document.createElement('div');
-        playDiv.className = 'hint-toggle';
-        const playCheck = document.createElement('input');
-        playCheck.type = 'checkbox';
-        playCheck.id = 'moderator-plays';
-        playCheck.checked = state.moderatorPlaying;
-        playCheck.onchange = () => { state.moderatorPlaying = playCheck.checked; };
-        const playLabel = document.createElement('label');
-        playLabel.htmlFor = 'moderator-plays';
-        playLabel.textContent = t('moderatorPlays');
-        playDiv.appendChild(playCheck);
-        playDiv.appendChild(playLabel);
-        section.appendChild(playDiv);
-
         // Create button
         const createBtn = document.createElement('button');
+        createBtn.type = 'button';
         createBtn.className = 'start-button';
         createBtn.textContent = t('createRoomBtn');
         createBtn.onclick = () => createRoom();
@@ -1137,6 +1161,7 @@ function renderOnlineSetup() {
 
         // Join button
         const joinBtn = document.createElement('button');
+        joinBtn.type = 'button';
         joinBtn.className = 'start-button';
         joinBtn.textContent = t('joinBtn');
         joinBtn.onclick = () => joinRoom();
@@ -1337,6 +1362,8 @@ function updateHints() {
 // ============================================================
 function markCell(pi, r, c) {
     if (!state.gameActive) return;
+    ensureAudio();
+
     const cell = state.boards[pi][r][c];
     if (cell.marked || cell.free) return;
 
@@ -1539,7 +1566,6 @@ function stopConfetti() {
 async function createRoom() {
     const nameInput = document.getElementById('moderator-name');
     const name = nameInput?.value.trim() || t('defaultPlayer') + ' 1';
-    state.moderatorPlaying = document.getElementById('moderator-plays')?.checked || false;
 
     try {
         const resp = await fetch(API_BASE + '/api/room', {
@@ -1549,15 +1575,19 @@ async function createRoom() {
                 name,
                 mode: state.mode,
                 hintsOn: document.getElementById('hints-check').checked,
-                playing: state.moderatorPlaying,
+                playing: false, // Will be set in lobby
             }),
         });
+        if (!resp.ok) {
+            throw new Error(`HTTP ${resp.status}`);
+        }
         const data = await resp.json();
         state.roomCode = data.room;
         state.playerId = data.moderatorId;
         state.role = 'moderator';
         state.onlinePhase = 'lobby';
         state.onlinePlayers = [];
+        state.moderatorPlaying = false; // Reset to false, will be toggled in lobby
 
         connectWebSocket();
         showLobby();
@@ -1712,6 +1742,8 @@ function showLobby() {
     const shareRow = document.getElementById('share-link-row');
     const startBtn = document.getElementById('lobby-start-btn');
     const waitingMsg = document.getElementById('lobby-waiting-msg');
+    const playToggle = document.getElementById('moderator-play-toggle');
+    const playCheckbox = document.getElementById('lobby-moderator-plays');
 
     code.textContent = state.roomCode;
 
@@ -1726,6 +1758,15 @@ function showLobby() {
         startBtn.classList.remove('hidden');
         startBtn.disabled = true;
         waitingMsg.classList.add('hidden');
+
+        // Show moderator play toggle
+        playToggle.classList.remove('hidden');
+        playCheckbox.checked = state.moderatorPlaying;
+        if (state.moderatorPlaying) {
+            playToggle.classList.add('active');
+        } else {
+            playToggle.classList.remove('active');
+        }
     } else {
         title.textContent = t('youJoinedAs') + ' ' + (state._joinName || '');
         subtitle.textContent = t('waitingForPlayers');
@@ -1733,8 +1774,33 @@ function showLobby() {
         startBtn.classList.add('hidden');
         waitingMsg.textContent = t('waitingForModerator');
         waitingMsg.classList.remove('hidden');
+        playToggle.classList.add('hidden');
     }
 
+    renderLobbyPlayers();
+}
+
+function toggleModeratorPlaying(event) {
+    const checkbox = document.getElementById('lobby-moderator-plays');
+    const toggle = document.getElementById('moderator-play-toggle');
+
+    // If checkbox was clicked directly, it already toggled - just update state
+    // If wrapper was clicked, manually toggle the checkbox
+    if (event && event.target !== checkbox) {
+        checkbox.checked = !checkbox.checked;
+    }
+
+    // Update state to match checkbox
+    state.moderatorPlaying = checkbox.checked;
+
+    // Update visual style
+    if (state.moderatorPlaying) {
+        toggle.classList.add('active');
+    } else {
+        toggle.classList.remove('active');
+    }
+
+    // Update start button enabled state based on new player count requirements
     renderLobbyPlayers();
 }
 
@@ -1802,7 +1868,7 @@ function copyShareLink() {
 }
 
 function onlineStartGame() {
-    wsSend({ type: 'start' });
+    wsSend({ type: 'start', moderatorPlaying: state.moderatorPlaying });
 }
 
 // ============================================================
@@ -1810,6 +1876,8 @@ function onlineStartGame() {
 // ============================================================
 
 function onlineGameStart(msg) {
+    ensureAudio();
+
     state.onlinePhase = 'playing';
     state.allBoards = msg.boards;
     state.gamePool = msg.gamePool;
@@ -1937,6 +2005,7 @@ function onlineCharPending(char) {
 
     // Play audio announcement for players
     if (char && state.role === 'player') {
+        ensureAudio();
         speakChar(char);
     }
 
