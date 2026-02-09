@@ -549,14 +549,16 @@ function isVowel(ch) { return VOWELS.includes(ch); }
 // ============================================================
 function getCharSpokenName(char) {
     for (const [ch, keywords] of ALL_SPEECH) {
-        if (ch === char) return keywords[0];
+        if (ch === char) return keywords[1] || keywords[0];
     }
     return char;
 }
 
 function speakChar(char) {
     speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(getCharSpokenName(char));
+    let text = getCharSpokenName(char);
+    text = text.replace(/สระ/g, 'สะหระ');
+    const utter = new SpeechSynthesisUtterance(text);
     utter.lang = 'th-TH';
     utter.rate = 0.9;
     speechSynthesis.speak(utter);
