@@ -65,6 +65,7 @@ type ClientMessage =
   | { type: "join"; name: string }
   | { type: "start" }
   | { type: "randomize" }
+  | { type: "replay" }
   | { type: "reveal" }
   | { type: "select"; r: number; c: number }
   | { type: "mark"; r: number; c: number };
@@ -277,6 +278,9 @@ export class BingoRoom implements DurableObject {
       case "randomize":
         await this.handleRandomize(senderId, senderRole);
         break;
+      case "replay":
+        await this.handleReplay(senderId, senderRole);
+        break;
       case "reveal":
         await this.handleReveal(senderId, senderRole);
         break;
@@ -416,11 +420,34 @@ export class BingoRoom implements DurableObject {
     // Send char to moderator only
     this.sendToId(this.room.moderatorId, { type: "randomized", pendingChar: char });
 
-    // Send pending notification to players
+    // Send char to players so they can hear it
     for (const player of this.room.players) {
       if (player.connected) {
-        this.sendToId(player.id, { type: "char_pending" });
+        this.sendToId(player.id, { type: "char_pending", char });
       }
+    }
+    // Also send to moderator if they're playing (so their browser plays audio too)
+    if (this.room.moderatorPlaying) {
+      this.sendToId(this.room.moderatorId, { type: "char_pending_moderator", char });
+    }
+  }
+
+  private async handleReplay(senderId: string, senderRole: string): Promise<void> {
+    if (!this.room) return;
+    if (senderRole !== "moderator" || senderId !== this.room.moderatorId) return;
+    if (!this.room.pendingChar) return; // no character to replay
+
+    const char = this.room.pendingChar;
+
+    // Re-broadcast the character to all players
+    for (const player of this.room.players) {
+      if (player.connected) {
+        this.sendToId(player.id, { type: "char_replay", char });
+      }
+    }
+    // Also send to moderator if they're playing
+    if (this.room.moderatorPlaying) {
+      this.sendToId(this.room.moderatorId, { type: "char_replay", char });
     }
   }
 

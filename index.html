@@ -857,6 +857,15 @@ function randomizeChar() {
 }
 
 function replayChar() {
+    // Online moderator: send to server to broadcast to all
+    if (state.gameType === 'online' && state.role === 'moderator' && state.pendingChar) {
+        wsSend({ type: 'replay' });
+        // Also play locally for moderator
+        speakChar(state.pendingChar);
+        return;
+    }
+
+    // Local mode or player: just play locally
     if (state.pendingChar) speakChar(state.pendingChar);
 }
 
@@ -1651,7 +1660,17 @@ function handleServerMessage(msg) {
 
         case 'char_pending':
             // Players — a char was randomized, they should select
-            onlineCharPending();
+            onlineCharPending(msg.char);
+            break;
+
+        case 'char_pending_moderator':
+            // Moderator playing — also announce the char they already received
+            if (msg.char) speakChar(msg.char);
+            break;
+
+        case 'char_replay':
+            // All participants — replay the character audio
+            if (msg.char) speakChar(msg.char);
             break;
 
         case 'revealed':
@@ -1911,10 +1930,16 @@ function onlineRandomized(pendingChar) {
     setVoiceStatus(t('statusPending'), '', 'statusPending');
 }
 
-function onlineCharPending() {
-    // Players know a char is pending — they can select
-    state.pendingChar = '__hidden__';  // truthy but unknown
+function onlineCharPending(char) {
+    // Players know a char is pending and receive it to announce
+    state.pendingChar = char || '__hidden__';  // truthy but may be unknown
     state.pendingSelections = {};
+
+    // Play audio announcement for players
+    if (char && state.role === 'player') {
+        speakChar(char);
+    }
+
     renderOnlineStatusBanner();
 }
 
