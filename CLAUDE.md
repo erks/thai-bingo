@@ -4,39 +4,67 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Thai Bingo (บิงโกภาษาไทย) — a single-file web app for learning Thai alphabet characters through bingo. The entire application lives in `index.html` (HTML + CSS + vanilla JS, no build step, no dependencies beyond Google Fonts).
+Thai Bingo (บิงโกภาษาไทย) — a web app for learning Thai alphabet characters through bingo. Supports both local (same-screen) and online multiplayer modes.
 
 ## Development
 
-Open `index.html` directly in a browser. No build, install, or server required. There are no tests or linting configured.
+- **Client:** Open `index.html` directly in a browser (or serve via any static server). No build step.
+- **Worker:** `cd worker && npm install && npx wrangler dev --local` to run the multiplayer API locally on port 8787.
+- **Deploy worker:** `cd worker && npx wrangler deploy`
+- There are no tests or linting configured.
 
 ## Architecture
 
-Everything is in one `index.html` file with three inline sections:
+### Client — `index.html`
 
-- **`<style>`** — All CSS, including player color theming via CSS custom properties (`--p1` through `--p4`), responsive breakpoints, and animations
-- **HTML** — Three screens toggled via `.hidden` class: setup screen, game screen, win overlay
-- **`<script>`** — All game logic in vanilla JS
+Single-file HTML + CSS + vanilla JS (no build step, no dependencies beyond Google Fonts and `audio.js`).
 
-### Key Data Structures
+- **`<style>`** — CSS including player color theming (`--p1`–`--p4`), responsive breakpoints, animations, and online-mode layouts (lobby, primary/secondary boards)
+- **HTML** — Screens toggled via `.hidden` class: setup, lobby (online), game, win overlay
+- **`<script>`** — All game logic; `state.gameType` (`'local'` | `'online'`) controls branching
 
-- `CONSONANTS` (44 Thai consonants) and `VOWELS` (24 Thai vowels) — the character pools
-- `CONSONANT_SPEECH` / `VOWEL_SPEECH` — maps each character to an array of spoken-form keywords (e.g., `['กอไก่','กอ ไก่','ไก่']`) used for Web Speech API matching
-- `state` object — single global state holding player count, mode, boards (5x5 grid arrays), called characters, speech recognition instance, etc.
+#### Key Data Structures
 
-### Game Flow
+- `CONSONANTS` (44), `VOWELS` (24) — character pools
+- `CONSONANT_SPEECH` / `VOWEL_SPEECH` — spoken-form keyword maps for Web Speech API
+- `state` object — global state for both local and online modes
 
-1. **Setup screen** — player count (2-4), player names, mode selection (consonants only / vowels only / mixed), hints toggle
-2. **`startGame()`** — shuffles character pool, slices to configured size (`GAME_POOL_SIZES`), generates 5x5 boards with center free space
-3. **Character calling** — two input modes: voice (Web Speech API with `th-TH` locale) or manual picker grid
-4. **`matchSpeechToChar()`** — matches speech recognition results against keyword lists, with fuzzy fallback to first recognized Thai consonant
-5. **Cell marking** — validates character was called, checks win condition (row/col/diagonal), triggers win overlay with confetti
+#### i18n
 
-### UI Conventions
+All UI text uses `t(key)` with `STRINGS.th` and `STRINGS.en`. Use `data-i18n` attributes for static HTML elements. Use "Moderator" (not "Teacher") for the caller role; Thai: "ผู้ดำเนินเกม".
 
-- Player boards are color-coded using CSS vars (`--p1` blue, `--p2` pink, `--p3` green, `--p4` orange)
-- Sound effects use Web Audio API (`playTone()`) — no audio files
-- All UI text is in Thai
+#### Online Mode Client State
+
+- `state.role`: `'moderator'` | `'player'`
+- `state._boardIdMap[index]` → playerId, `state._boardIndexMap[playerId]` → index
+- Player view: own board (index 0, `.primary`) + others in `.secondary-boards-row`
+- Moderator: caller section visible; players: caller section hidden
+- `API_BASE` auto-detects `localhost:8787` vs production
+
+### Worker — `worker/`
+
+Cloudflare Worker + Durable Object for multiplayer WebSocket API.
+
+- **`worker/src/config.ts`** — All tunable server parameters (timeouts, pool sizes, room code format, player limits)
+- **`worker/src/index.ts`** — Stateless Worker entry point. Routes: `POST /api/room` (create), `GET /api/room/:code/websocket` (WS upgrade). CORS allowlist here.
+- **`worker/src/room.ts`** — `BingoRoom` Durable Object using Hibernation API. Manages room state, board generation, turn flow, win detection.
+- **`worker/wrangler.toml`** — DO binding `BINGO_ROOM` → `BingoRoom`
+
+#### Durable Object Notes
+
+- Room state is persisted to `state.storage` (survives hibernation). Every mutation must call `await this.saveRoom()`.
+- State is restored in the constructor via `blockConcurrencyWhile`.
+- Rooms auto-expire: hard ceiling alarm at creation + cleanup alarm on any disconnect.
+
+#### WebSocket Message Protocol
+
+Client → Server: `start`, `randomize`, `reveal`, `select`, `mark`
+Server → Client: `joined`, `player_joined`, `player_disconnected`, `player_reconnected`, `moderator_disconnected`, `game_start`, `randomized`, `char_pending`, `revealed`, `mark_result`, `win`, `error`
+
+## Hosting
+
+- Client: GitHub Pages at `https://erks.github.io/thai-bingo/`
+- Worker API: Cloudflare Workers
 
 ## Git
 

@@ -301,6 +301,94 @@
         .win-buttons button:last-child { background: #f3f4f6; color: #4b5563; }
         .win-buttons button:hover { transform: translateY(-2px); }
 
+        /* ====== ONLINE MODE ====== */
+        .room-code-display {
+            font-family: monospace; font-size: 3rem; font-weight: 900;
+            letter-spacing: 0.3em; text-align: center;
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            margin: 16px 0 8px;
+        }
+        .lobby-container {
+            background: white; border-radius: 24px; padding: 40px;
+            max-width: 520px; width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2); text-align: center;
+        }
+        .lobby-container h2 {
+            font-size: 1.5rem; font-weight: 800; color: #4b5563; margin-bottom: 4px;
+        }
+        .lobby-subtitle { color: #9ca3af; font-size: 0.9rem; margin-bottom: 16px; }
+        .share-link-row {
+            display: flex; align-items: center; gap: 8px; justify-content: center;
+            margin-bottom: 20px;
+        }
+        .share-link-row input {
+            flex: 1; max-width: 320px; padding: 8px 12px; border: 2px solid #e5e7eb;
+            border-radius: 10px; font-family: monospace; font-size: 0.85rem;
+            color: #6b7280; text-align: center; outline: none;
+        }
+        .copy-btn {
+            padding: 8px 14px; border: 2px solid #e5e7eb; border-radius: 10px;
+            background: white; font-family: inherit; font-size: 0.85rem; font-weight: 600;
+            cursor: pointer; transition: all 0.2s; color: #6b7280;
+        }
+        .copy-btn:hover { border-color: #a78bfa; color: #7c3aed; }
+        .copy-btn.copied { border-color: #059669; color: #059669; }
+        .player-list {
+            text-align: left; margin: 16px 0; min-height: 40px;
+        }
+        .player-list-item {
+            display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+            border-radius: 10px; animation: chipIn 0.3s ease-out; margin-bottom: 4px;
+        }
+        .player-list-item .color-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+        .player-list-item .player-name { font-weight: 600; font-size: 0.95rem; }
+        .player-list-item .you-badge {
+            font-size: 0.75rem; font-weight: 700; color: #7c3aed;
+            background: #ede9fe; padding: 2px 8px; border-radius: 8px;
+        }
+        .player-list-item .connection-dot {
+            width: 8px; height: 8px; border-radius: 50%; margin-left: auto;
+        }
+        .connection-dot.online { background: #22c55e; }
+        .connection-dot.offline { background: #d1d5db; }
+        .status-banner {
+            background: white; border-radius: 14px; padding: 12px 20px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            max-width: 900px; width: 100%; text-align: center;
+            font-weight: 700; font-size: 1rem; color: #6b7280;
+        }
+        .status-banner.pending { color: #f59e0b; }
+        .status-banner.selecting { color: #7c3aed; }
+        .status-banner.revealed { color: #059669; }
+        .online-setup-section { margin-bottom: 16px; text-align: left; }
+        .online-setup-section > label {
+            display: block; font-weight: 700; margin-bottom: 8px; font-size: 1rem; color: #4b5563;
+        }
+        .online-setup-section input[type="text"] {
+            width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 12px;
+            font-family: inherit; font-size: 1rem; outline: none; transition: border-color 0.2s;
+        }
+        .online-setup-section input[type="text"]:focus { border-color: #7c3aed; }
+        .room-code-input {
+            font-family: monospace !important; font-size: 1.8rem !important; font-weight: 900 !important;
+            text-align: center !important; letter-spacing: 0.15em !important; text-transform: uppercase;
+        }
+
+        /* Online board layout */
+        .boards-container.online-player { flex-direction: column; align-items: center; }
+        .boards-container.online-player .board-card.primary {
+            width: 100%; max-width: 420px;
+        }
+        .boards-container.online-player .board-card.secondary {
+            width: calc(33.33% - 12px); max-width: 200px; min-width: 160px;
+        }
+        .boards-container.online-player .board-card.secondary .cell { font-size: 0.8rem; cursor: default; }
+        .boards-container.online-player .board-card.secondary .cell:hover { transform: none; border-color: #e5e7eb; }
+        .secondary-boards-row {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; width: 100%;
+        }
+
         /* ====== RESPONSIVE ====== */
         @media (max-width: 900px) {
             .players-3 .board-card { width: calc(50% - 8px); }
@@ -348,6 +436,22 @@
         </div>
 
         <button class="start-button" onclick="startGame()" data-i18n="startGame">เริ่มเกม! 🎮</button>
+    </div>
+</div>
+
+<!-- ====== LOBBY SCREEN ====== -->
+<div id="lobby-screen" class="screen hidden">
+    <div class="lobby-container">
+        <h2 id="lobby-title"></h2>
+        <div class="room-code-display" id="lobby-room-code"></div>
+        <div class="lobby-subtitle" id="lobby-subtitle"></div>
+        <div class="share-link-row" id="share-link-row">
+            <input type="text" id="share-link-input" readonly>
+            <button class="copy-btn" id="copy-link-btn" onclick="copyShareLink()"></button>
+        </div>
+        <div class="player-list" id="lobby-player-list"></div>
+        <button class="start-button" id="lobby-start-btn" onclick="onlineStartGame()" disabled></button>
+        <p id="lobby-waiting-msg" class="hidden" style="color:#9ca3af; margin-top:12px; font-weight:600;"></p>
     </div>
 </div>
 
@@ -450,6 +554,42 @@ const STRINGS = {
         statusPending: 'กด เฉลย เพื่อเปิด หรือ ฟังอีกครั้ง',
         statusNext: 'กดสุ่มเพื่อเรียกตัวถัดไป',
         statusEmpty: 'หมดตัวอักษรแล้ว',
+        // Online mode
+        gameTypeLocal: 'เล่นด้วยกัน',
+        gameTypeOnline: 'ออนไลน์',
+        gameType: 'ประเภทเกม',
+        createRoom: 'สร้างห้อง',
+        joinRoom: 'เข้าร่วม',
+        onlineRole: 'บทบาท',
+        moderatorName: 'ชื่อของคุณ',
+        moderatorPlays: 'ฉันเล่นด้วย',
+        createRoomBtn: 'สร้างห้อง',
+        roomCodeLabel: 'รหัสห้อง',
+        roomCodePlaceholder: 'เช่น A3BK7P',
+        joinName: 'ชื่อของคุณ',
+        joinBtn: 'เข้าร่วม',
+        yourRoom: 'ห้องของคุณ',
+        shareLink: 'แชร์ลิงก์',
+        copyLink: 'คัดลอก',
+        linkCopied: 'คัดลอกแล้ว!',
+        waitingForPlayers: 'รอผู้เล่นเข้าร่วม...',
+        lobbyPlayerCount: 'ผู้เล่น {n} คนเข้าร่วมแล้ว',
+        startGameOnline: 'เริ่มเกม!',
+        playersJoined: 'ผู้เล่น',
+        minPlayersNeeded: 'ต้องมีผู้เล่นอย่างน้อย 1 คน',
+        you: 'คุณ',
+        waitingForModerator: 'รอผู้ดำเนินเกมเริ่ม...',
+        youJoinedAs: 'คุณเข้าร่วมในชื่อ',
+        statusModeratorRandomizing: 'ผู้ดำเนินเกมกำลังสุ่ม...',
+        statusSelectYourCell: 'เลือกช่องของคุณ!',
+        statusWaitingReveal: 'รอเฉลย...',
+        statusCharRevealed: 'เฉลยแล้ว!',
+        playerDisconnected: 'หลุดการเชื่อมต่อ',
+        moderatorDisconnected: 'ผู้ดำเนินเกมหลุดการเชื่อมต่อ',
+        reconnecting: 'กำลังเชื่อมต่อใหม่...',
+        errorRoomNotFound: 'ไม่พบห้อง',
+        errorConnection: 'เชื่อมต่อไม่ได้',
+        connecting: 'กำลังเชื่อมต่อ...',
     },
     en: {
         title: 'Thai Alphabet Bingo',
@@ -474,6 +614,42 @@ const STRINGS = {
         statusPending: 'Press Reveal or Replay',
         statusNext: 'Press randomize for next',
         statusEmpty: 'No characters left',
+        // Online mode
+        gameTypeLocal: 'Local',
+        gameTypeOnline: 'Online',
+        gameType: 'Game type',
+        createRoom: 'Create Room',
+        joinRoom: 'Join Room',
+        onlineRole: 'Role',
+        moderatorName: 'Your name',
+        moderatorPlays: "I'm playing too",
+        createRoomBtn: 'Create Room',
+        roomCodeLabel: 'Room code',
+        roomCodePlaceholder: 'e.g. A3BK7P',
+        joinName: 'Your name',
+        joinBtn: 'Join',
+        yourRoom: 'Your room',
+        shareLink: 'Share link',
+        copyLink: 'Copy',
+        linkCopied: 'Copied!',
+        waitingForPlayers: 'Waiting for players...',
+        lobbyPlayerCount: '{n} player(s) joined',
+        startGameOnline: 'Start Game!',
+        playersJoined: 'Players',
+        minPlayersNeeded: 'Need at least 1 player',
+        you: 'You',
+        waitingForModerator: 'Waiting for moderator to start...',
+        youJoinedAs: 'You joined as',
+        statusModeratorRandomizing: 'Moderator is picking...',
+        statusSelectYourCell: 'Select your cell!',
+        statusWaitingReveal: 'Waiting for reveal...',
+        statusCharRevealed: 'Revealed!',
+        playerDisconnected: 'Disconnected',
+        moderatorDisconnected: 'Moderator disconnected',
+        reconnecting: 'Reconnecting...',
+        errorRoomNotFound: 'Room not found',
+        errorConnection: 'Connection failed',
+        connecting: 'Connecting...',
     }
 };
 
@@ -500,11 +676,23 @@ function applyLang() {
     if (vs && vs.dataset.statusKey) {
         vs.textContent = t(vs.dataset.statusKey);
     }
+    // Re-render lobby if visible
+    if (!document.getElementById('lobby-screen').classList.contains('hidden')) {
+        showLobby();
+    }
+    // Re-render online status banner if visible
+    if (typeof renderOnlineStatusBanner === 'function' && state.gameType === 'online' && state.onlinePhase === 'playing') {
+        renderOnlineStatusBanner();
+    }
 }
 
 // ============================================================
 // STATE
 // ============================================================
+const API_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+    ? 'http://localhost:8787'
+    : 'https://thai-bingo-api.erks.workers.dev';
+
 let state = {
     lang: localStorage.getItem('lang') || 'th',
     playerCount: 2,
@@ -520,6 +708,18 @@ let state = {
     confettiId: null,
     pendingChar: null,
     pendingSelections: {},
+    // Online mode
+    gameType: 'local',         // 'local' or 'online'
+    onlineRole: 'create',      // 'create' or 'join' (setup choice)
+    role: null,                // 'moderator' or 'player' (in-game)
+    moderatorPlaying: false,
+    ws: null,
+    playerId: null,
+    roomCode: null,
+    onlinePlayers: [],
+    allBoards: {},             // {playerId: board}
+    myBoardId: null,
+    onlinePhase: null,         // 'lobby' | 'playing'
 };
 
 // ============================================================
@@ -626,6 +826,12 @@ function randomizeChar() {
     if (!state.gameActive) return;
     ensureAudio();
 
+    // Online moderator: send to server
+    if (state.gameType === 'online' && state.role === 'moderator') {
+        wsSend({ type: 'randomize' });
+        return;
+    }
+
     const remaining = state.gamePool.filter(ch => !state.calledChars.includes(ch));
     if (remaining.length === 0) {
         setVoiceStatus(t('statusEmpty'), 'error', 'statusEmpty');
@@ -656,6 +862,14 @@ function replayChar() {
 
 function revealChar() {
     if (!state.pendingChar) return;
+
+    // Online moderator: send to server
+    if (state.gameType === 'online' && state.role === 'moderator') {
+        if (charVoiceover) { charVoiceover.pause(); charVoiceover.currentTime = 0; }
+        wsSend({ type: 'reveal' });
+        return;
+    }
+
     if (charVoiceover) { charVoiceover.pause(); charVoiceover.currentTime = 0; }
     const char = state.pendingChar;
     state.pendingChar = null;
@@ -728,6 +942,52 @@ function callCharacter(char) {
 // SETUP UI
 // ============================================================
 function initSetup() {
+    // --- Game type toggle ---
+    let gtContainer = document.getElementById('game-type-btns');
+    if (!gtContainer) {
+        const section = document.createElement('div');
+        section.className = 'setup-section';
+        section.id = 'game-type-section';
+        const label = document.createElement('label');
+        label.setAttribute('data-i18n', 'gameType');
+        label.textContent = t('gameType');
+        section.appendChild(label);
+        gtContainer = document.createElement('div');
+        gtContainer.className = 'btn-group';
+        gtContainer.id = 'game-type-btns';
+        section.appendChild(gtContainer);
+        const setupContainer = document.querySelector('.setup-container');
+        setupContainer.insertBefore(section, setupContainer.querySelector('.setup-section'));
+    }
+    gtContainer.innerHTML = '';
+    [{key:'local',i18n:'gameTypeLocal'},{key:'online',i18n:'gameTypeOnline'}].forEach(g => {
+        const btn = document.createElement('button');
+        btn.textContent = t(g.i18n);
+        btn.className = g.key === state.gameType ? 'active' : '';
+        btn.onclick = () => { state.gameType = g.key; initSetup(); };
+        gtContainer.appendChild(btn);
+    });
+
+    // --- Show/hide sections based on game type ---
+    const localSections = ['player-count-btns', 'name-inputs'].map(id => document.getElementById(id)?.closest('.setup-section'));
+    const startBtn = document.querySelector('.start-button');
+
+    // Remove old online section if exists
+    const oldOnline = document.getElementById('online-setup-section');
+    if (oldOnline) oldOnline.remove();
+
+    if (state.gameType === 'local') {
+        localSections.forEach(s => { if (s) s.classList.remove('hidden'); });
+        startBtn.classList.remove('hidden');
+        startBtn.textContent = t('startGame');
+        startBtn.onclick = () => startGame();
+    } else {
+        localSections.forEach(s => { if (s) s.classList.add('hidden'); });
+        startBtn.classList.add('hidden');
+        renderOnlineSetup();
+    }
+
+    // --- Player count (local only) ---
     const pcContainer = document.getElementById('player-count-btns');
     pcContainer.innerHTML = '';
     [2, 3, 4].forEach(n => {
@@ -738,6 +998,7 @@ function initSetup() {
         pcContainer.appendChild(btn);
     });
 
+    // --- Name inputs (local only) ---
     const nameContainer = document.getElementById('name-inputs');
     nameContainer.innerHTML = '';
     for (let i = 0; i < state.playerCount; i++) {
@@ -756,6 +1017,7 @@ function initSetup() {
         nameContainer.appendChild(row);
     }
 
+    // --- Mode buttons ---
     const modeContainer = document.getElementById('mode-btns');
     modeContainer.innerHTML = '';
     [{ key: 'consonants', i18n: 'modeConsonants' }, { key: 'vowels', i18n: 'modeVowels' }, { key: 'mixed', i18n: 'modeMixed' }].forEach(m => {
@@ -765,6 +1027,116 @@ function initSetup() {
         btn.onclick = () => { state.mode = m.key; initSetup(); };
         modeContainer.appendChild(btn);
     });
+}
+
+function renderOnlineSetup() {
+    const container = document.querySelector('.setup-container');
+    const section = document.createElement('div');
+    section.id = 'online-setup-section';
+
+    // Role toggle: Create / Join
+    const roleSection = document.createElement('div');
+    roleSection.className = 'setup-section';
+    const roleLabel = document.createElement('label');
+    roleLabel.textContent = t('onlineRole');
+    roleSection.appendChild(roleLabel);
+    const roleGroup = document.createElement('div');
+    roleGroup.className = 'btn-group';
+    [{key:'create',i18n:'createRoom'},{key:'join',i18n:'joinRoom'}].forEach(r => {
+        const btn = document.createElement('button');
+        btn.textContent = t(r.i18n);
+        btn.className = r.key === state.onlineRole ? 'active' : '';
+        btn.onclick = () => { state.onlineRole = r.key; initSetup(); };
+        roleGroup.appendChild(btn);
+    });
+    roleSection.appendChild(roleGroup);
+    section.appendChild(roleSection);
+
+    if (state.onlineRole === 'create') {
+        // Name input
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'online-setup-section';
+        const nameLabel = document.createElement('label');
+        nameLabel.textContent = t('moderatorName');
+        nameDiv.appendChild(nameLabel);
+        const nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.id = 'moderator-name';
+        nameInput.placeholder = t('moderatorName');
+        nameDiv.appendChild(nameInput);
+        section.appendChild(nameDiv);
+
+        // "I'm playing too" checkbox
+        const playDiv = document.createElement('div');
+        playDiv.className = 'hint-toggle';
+        const playCheck = document.createElement('input');
+        playCheck.type = 'checkbox';
+        playCheck.id = 'moderator-plays';
+        playCheck.checked = state.moderatorPlaying;
+        playCheck.onchange = () => { state.moderatorPlaying = playCheck.checked; };
+        const playLabel = document.createElement('label');
+        playLabel.htmlFor = 'moderator-plays';
+        playLabel.textContent = t('moderatorPlays');
+        playDiv.appendChild(playCheck);
+        playDiv.appendChild(playLabel);
+        section.appendChild(playDiv);
+
+        // Create button
+        const createBtn = document.createElement('button');
+        createBtn.className = 'start-button';
+        createBtn.textContent = t('createRoomBtn');
+        createBtn.onclick = () => createRoom();
+        section.appendChild(createBtn);
+    } else {
+        // Room code input
+        const codeDiv = document.createElement('div');
+        codeDiv.className = 'online-setup-section';
+        const codeLabel = document.createElement('label');
+        codeLabel.textContent = t('roomCodeLabel');
+        codeDiv.appendChild(codeLabel);
+        const codeInput = document.createElement('input');
+        codeInput.type = 'text';
+        codeInput.id = 'join-room-code';
+        codeInput.className = 'room-code-input';
+        codeInput.placeholder = t('roomCodePlaceholder');
+        codeInput.maxLength = 6;
+        codeInput.oninput = () => { codeInput.value = codeInput.value.toUpperCase().replace(/[^A-Z0-9]/g,''); };
+        codeDiv.appendChild(codeInput);
+        section.appendChild(codeDiv);
+
+        // Auto-fill from URL ?room= param
+        const urlRoom = new URLSearchParams(location.search).get('room');
+        if (urlRoom) {
+            setTimeout(() => {
+                const el = document.getElementById('join-room-code');
+                if (el && !el.value) el.value = urlRoom.toUpperCase();
+            }, 0);
+        }
+
+        // Name input
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'online-setup-section';
+        const nameLabel = document.createElement('label');
+        nameLabel.textContent = t('joinName');
+        nameDiv.appendChild(nameLabel);
+        const nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.id = 'join-player-name';
+        nameInput.placeholder = t('joinName');
+        nameDiv.appendChild(nameInput);
+        section.appendChild(nameDiv);
+
+        // Join button
+        const joinBtn = document.createElement('button');
+        joinBtn.className = 'start-button';
+        joinBtn.textContent = t('joinBtn');
+        joinBtn.onclick = () => joinRoom();
+        section.appendChild(joinBtn);
+    }
+
+    // Insert before the mode section (which is hidden) or at the end
+    const hintsToggle = container.querySelector('.hint-toggle');
+    container.insertBefore(section, hintsToggle);
 }
 
 // ============================================================
@@ -861,12 +1233,32 @@ function renderCalledHistory() {
 
 function renderBoards() {
     const container = document.getElementById('boards-container');
-    container.className = 'boards-container players-' + state.playerCount;
     container.innerHTML = '';
 
+    const isOnline = state.gameType === 'online';
+    const hasOwnBoard = isOnline && state.myBoardId;
+    const isPlayerView = isOnline && (state.role === 'player' || (state.role === 'moderator' && state.moderatorPlaying));
+
+    if (isPlayerView) {
+        container.className = 'boards-container online-player';
+    } else {
+        container.className = 'boards-container players-' + state.playerCount;
+    }
+
+    let secondaryRow = null;
+    if (isPlayerView && state.boards.length > 1) {
+        secondaryRow = document.createElement('div');
+        secondaryRow.className = 'secondary-boards-row';
+    }
+
     state.boards.forEach((board, pi) => {
+        const isPrimary = isPlayerView && pi === 0; // own board is first
+        const isSecondary = isPlayerView && pi > 0;
+
         const card = document.createElement('div');
-        card.className = 'board-card p' + pi;
+        card.className = 'board-card p' + (pi % 4);
+        if (isPrimary) card.classList.add('primary');
+        if (isSecondary) card.classList.add('secondary');
 
         const header = document.createElement('div');
         header.className = 'board-header';
@@ -886,7 +1278,10 @@ function renderBoards() {
 
                 if (cell.free) el.classList.add('free');
                 if (cell.marked && !cell.free) el.classList.add('marked');
-                if (!cell.free && !cell.marked) {
+
+                // Only allow clicking own board cells (or all in local mode)
+                const canClick = !isOnline || (hasOwnBoard && state._boardIdMap[pi] === state.myBoardId);
+                if (!cell.free && !cell.marked && canClick) {
                     el.onclick = () => markCell(pi, r, c);
                 }
 
@@ -895,8 +1290,17 @@ function renderBoards() {
         }
 
         card.appendChild(grid);
-        container.appendChild(card);
+
+        if (isSecondary && secondaryRow) {
+            secondaryRow.appendChild(card);
+        } else {
+            container.appendChild(card);
+        }
     });
+
+    if (secondaryRow && secondaryRow.children.length > 0) {
+        container.appendChild(secondaryRow);
+    }
 
     updateHints();
 }
@@ -927,15 +1331,50 @@ function markCell(pi, r, c) {
     const cell = state.boards[pi][r][c];
     if (cell.marked || cell.free) return;
 
-    // If a character is pending, allow tentative selection (one per player)
+    // Online mode: only allow marking own board
+    if (state.gameType === 'online') {
+        const boardPlayerId = state._boardIdMap[pi];
+        if (boardPlayerId !== state.myBoardId) return; // can't click other boards
+
+        if (state.pendingChar) {
+            // Tentative selection — visual only, send to server
+            const prev = state.pendingSelections[pi];
+            if (prev) {
+                const prevEl = document.getElementById(`cell-${pi}-${prev.r}-${prev.c}`);
+                if (prevEl) prevEl.classList.remove('selected');
+            }
+            if (prev && prev.r === r && prev.c === c) {
+                delete state.pendingSelections[pi];
+                wsSend({ type: 'select', r, c }); // toggle off
+            } else {
+                state.pendingSelections[pi] = { pi, r, c };
+                const el = document.getElementById(`cell-${pi}-${r}-${c}`);
+                el.classList.add('selected');
+                sfxMark();
+                wsSend({ type: 'select', r, c });
+            }
+            return;
+        }
+
+        // Mark already-called character
+        if (state.calledChars.includes(cell.char)) {
+            wsSend({ type: 'mark', r, c });
+        } else {
+            sfxWrong();
+            const el = document.getElementById(`cell-${pi}-${r}-${c}`);
+            el.classList.add('wrong');
+            setTimeout(() => el.classList.remove('wrong'), 350);
+        }
+        return;
+    }
+
+    // Local mode — existing behavior
     if (state.pendingChar) {
-        // Deselect previous selection for this player
         const prev = state.pendingSelections[pi];
         if (prev) {
             const prevEl = document.getElementById(`cell-${prev.pi}-${prev.r}-${prev.c}`);
             if (prevEl) prevEl.classList.remove('selected');
         }
-        // Toggle: clicking same cell deselects
         if (prev && prev.r === r && prev.c === c) {
             delete state.pendingSelections[pi];
         } else {
@@ -947,7 +1386,6 @@ function markCell(pi, r, c) {
         return;
     }
 
-    // Normal marking for already-called characters
     if (!state.calledChars.includes(cell.char)) {
         sfxWrong();
         const el = document.getElementById(`cell-${pi}-${r}-${c}`);
@@ -1026,8 +1464,21 @@ function resetGame() {
 function backToSetup() {
     stopConfetti();
     if (charVoiceover) { charVoiceover.pause(); charVoiceover.currentTime = 0; }
+    // Close WebSocket if online
+    if (state.ws) { state.ws.close(); state.ws = null; }
+    state.gameType = 'local';
+    state.role = null;
+    state.roomCode = null;
+    state.onlinePhase = null;
+    // Remove online status banner if present
+    const banner = document.getElementById('online-status-banner');
+    if (banner) banner.remove();
+    // Show caller section again
+    document.querySelector('.caller-section').classList.remove('hidden');
+
     document.getElementById('win-overlay').classList.add('hidden');
     document.getElementById('game-screen').classList.add('hidden');
+    document.getElementById('lobby-screen').classList.add('hidden');
     document.getElementById('setup-screen').classList.remove('hidden');
 }
 
@@ -1073,8 +1524,511 @@ function stopConfetti() {
 }
 
 // ============================================================
+// ONLINE MODE — WebSocket Client
+// ============================================================
+
+async function createRoom() {
+    const nameInput = document.getElementById('moderator-name');
+    const name = nameInput?.value.trim() || t('defaultPlayer') + ' 1';
+    state.moderatorPlaying = document.getElementById('moderator-plays')?.checked || false;
+
+    try {
+        const resp = await fetch(API_BASE + '/api/room', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name,
+                mode: state.mode,
+                hintsOn: document.getElementById('hints-check').checked,
+                playing: state.moderatorPlaying,
+            }),
+        });
+        const data = await resp.json();
+        state.roomCode = data.room;
+        state.playerId = data.moderatorId;
+        state.role = 'moderator';
+        state.onlinePhase = 'lobby';
+        state.onlinePlayers = [];
+
+        connectWebSocket();
+        showLobby();
+    } catch (e) {
+        alert(t('errorConnection'));
+    }
+}
+
+function joinRoom() {
+    const code = document.getElementById('join-room-code')?.value.trim().toUpperCase();
+    const name = document.getElementById('join-player-name')?.value.trim() || t('defaultPlayer');
+    if (!code || code.length !== 6) return;
+
+    state.roomCode = code;
+    state.playerId = Math.random().toString(36).slice(2, 10);
+    state.role = 'player';
+    state.onlinePhase = 'lobby';
+    state._joinName = name;
+
+    connectWebSocket();
+    showLobby();
+}
+
+function connectWebSocket() {
+    const wsBase = API_BASE.replace(/^http/, 'ws');
+    const params = new URLSearchParams({
+        role: state.role,
+        id: state.playerId,
+        name: state._joinName || '',
+    });
+    const url = `${wsBase}/api/room/${state.roomCode}/websocket?${params}`;
+    const ws = new WebSocket(url);
+
+    ws.onopen = () => {
+        state.ws = ws;
+    };
+
+    ws.onmessage = (event) => {
+        const msg = JSON.parse(event.data);
+        handleServerMessage(msg);
+    };
+
+    ws.onclose = () => {
+        state.ws = null;
+        // Try reconnect after 2s if still in online mode
+        if (state.gameType === 'online' && state.roomCode) {
+            setTimeout(() => {
+                if (state.gameType === 'online' && !state.ws) {
+                    connectWebSocket();
+                }
+            }, 2000);
+        }
+    };
+
+    ws.onerror = () => {
+        ws.close();
+    };
+}
+
+function wsSend(msg) {
+    if (state.ws && state.ws.readyState === WebSocket.OPEN) {
+        state.ws.send(JSON.stringify(msg));
+    }
+}
+
+function handleServerMessage(msg) {
+    switch (msg.type) {
+        case 'joined':
+            state.playerId = msg.playerId;
+            state.onlinePlayers = msg.players || [];
+            state.onlinePhase = msg.phase || 'lobby';
+            renderLobbyPlayers();
+            break;
+
+        case 'player_joined':
+            state.onlinePlayers = msg.players || [];
+            renderLobbyPlayers();
+            break;
+
+        case 'player_disconnected':
+            markPlayerConnection(msg.playerId, false);
+            break;
+
+        case 'player_reconnected':
+            markPlayerConnection(msg.playerId, true);
+            break;
+
+        case 'moderator_disconnected':
+            // Show a banner or alert
+            break;
+
+        case 'game_start':
+            onlineGameStart(msg);
+            break;
+
+        case 'randomized':
+            // Moderator only — gets the pending char
+            onlineRandomized(msg.pendingChar);
+            break;
+
+        case 'char_pending':
+            // Players — a char was randomized, they should select
+            onlineCharPending();
+            break;
+
+        case 'revealed':
+            onlineRevealed(msg);
+            break;
+
+        case 'mark_result':
+            onlineMarkResult(msg);
+            break;
+
+        case 'win':
+            onlineWin(msg);
+            break;
+
+        case 'error':
+            alert(msg.message);
+            break;
+    }
+}
+
+function markPlayerConnection(playerId, connected) {
+    const p = state.onlinePlayers.find(p => p.id === playerId);
+    if (p) p.connected = connected;
+    renderLobbyPlayers();
+}
+
+// ============================================================
+// ONLINE MODE — Lobby
+// ============================================================
+
+function showLobby() {
+    document.getElementById('setup-screen').classList.add('hidden');
+    document.getElementById('game-screen').classList.add('hidden');
+    document.getElementById('lobby-screen').classList.remove('hidden');
+
+    const title = document.getElementById('lobby-title');
+    const code = document.getElementById('lobby-room-code');
+    const subtitle = document.getElementById('lobby-subtitle');
+    const shareRow = document.getElementById('share-link-row');
+    const startBtn = document.getElementById('lobby-start-btn');
+    const waitingMsg = document.getElementById('lobby-waiting-msg');
+
+    code.textContent = state.roomCode;
+
+    if (state.role === 'moderator') {
+        title.textContent = t('yourRoom');
+        subtitle.textContent = t('waitingForPlayers');
+        shareRow.classList.remove('hidden');
+        const shareUrl = location.origin + location.pathname + '?room=' + state.roomCode;
+        document.getElementById('share-link-input').value = shareUrl;
+        document.getElementById('copy-link-btn').textContent = t('copyLink');
+        startBtn.textContent = t('startGameOnline');
+        startBtn.classList.remove('hidden');
+        startBtn.disabled = true;
+        waitingMsg.classList.add('hidden');
+    } else {
+        title.textContent = t('youJoinedAs') + ' ' + (state._joinName || '');
+        subtitle.textContent = t('waitingForPlayers');
+        shareRow.classList.add('hidden');
+        startBtn.classList.add('hidden');
+        waitingMsg.textContent = t('waitingForModerator');
+        waitingMsg.classList.remove('hidden');
+    }
+
+    renderLobbyPlayers();
+}
+
+function renderLobbyPlayers() {
+    const list = document.getElementById('lobby-player-list');
+    if (!list) return;
+    list.innerHTML = '';
+
+    state.onlinePlayers.forEach((p, i) => {
+        const item = document.createElement('div');
+        item.className = 'player-list-item';
+
+        const dot = document.createElement('div');
+        dot.className = 'color-dot';
+        dot.style.background = PLAYER_COLORS[i % PLAYER_COLORS.length];
+        item.appendChild(dot);
+
+        const name = document.createElement('span');
+        name.className = 'player-name';
+        name.textContent = p.name;
+        item.appendChild(name);
+
+        if (p.id === state.playerId) {
+            const badge = document.createElement('span');
+            badge.className = 'you-badge';
+            badge.textContent = t('you');
+            item.appendChild(badge);
+        }
+
+        const connDot = document.createElement('div');
+        connDot.className = 'connection-dot ' + (p.connected !== false ? 'online' : 'offline');
+        item.appendChild(connDot);
+
+        list.appendChild(item);
+    });
+
+    // Update subtitle with player count (both roles)
+    const subtitle = document.getElementById('lobby-subtitle');
+    const count = state.onlinePlayers.length;
+    if (subtitle) {
+        subtitle.textContent = count === 0
+            ? t('waitingForPlayers')
+            : t('lobbyPlayerCount').replace('{n}', count);
+    }
+
+    // Update start button enable state (moderator only)
+    if (state.role === 'moderator') {
+        const startBtn = document.getElementById('lobby-start-btn');
+        const minNeeded = state.moderatorPlaying ? 1 : 2;
+        if (startBtn) startBtn.disabled = count < minNeeded;
+    }
+}
+
+function copyShareLink() {
+    const input = document.getElementById('share-link-input');
+    navigator.clipboard.writeText(input.value).then(() => {
+        const btn = document.getElementById('copy-link-btn');
+        btn.textContent = t('linkCopied');
+        btn.classList.add('copied');
+        setTimeout(() => {
+            btn.textContent = t('copyLink');
+            btn.classList.remove('copied');
+        }, 2000);
+    });
+}
+
+function onlineStartGame() {
+    wsSend({ type: 'start' });
+}
+
+// ============================================================
+// ONLINE MODE — Game
+// ============================================================
+
+function onlineGameStart(msg) {
+    state.onlinePhase = 'playing';
+    state.allBoards = msg.boards;
+    state.gamePool = msg.gamePool;
+    state.onlinePlayers = msg.players;
+    state.myBoardId = msg.yourBoardId;
+    state.hintsOn = msg.hintsOn;
+    state.calledChars = msg.calledChars || [];
+    state.currentChar = msg.currentChar || null;
+    state.winners = msg.winners || [];
+    state.gameActive = true;
+    state.pendingChar = null;
+    state.pendingSelections = {};
+
+    // Build boards array + players array for rendering
+    const playerIds = Object.keys(state.allBoards);
+    state.boards = [];
+    state.players = [];
+    state._boardIdMap = {};  // index → playerId
+    state._boardIndexMap = {}; // playerId → index
+
+    // For player view: own board first, then others
+    if (state.role === 'player' || (state.role === 'moderator' && state.moderatorPlaying)) {
+        // Own board first
+        if (state.myBoardId && state.allBoards[state.myBoardId]) {
+            const idx = state.boards.length;
+            state.boards.push(state.allBoards[state.myBoardId]);
+            const info = state.onlinePlayers.find(p => p.id === state.myBoardId);
+            state.players.push(info ? info.name : t('you'));
+            state._boardIdMap[idx] = state.myBoardId;
+            state._boardIndexMap[state.myBoardId] = idx;
+        }
+        // Others
+        for (const pid of playerIds) {
+            if (pid === state.myBoardId) continue;
+            const idx = state.boards.length;
+            state.boards.push(state.allBoards[pid]);
+            const info = state.onlinePlayers.find(p => p.id === pid);
+            state.players.push(info ? info.name : pid);
+            state._boardIdMap[idx] = pid;
+            state._boardIndexMap[pid] = idx;
+        }
+    } else {
+        // Moderator (not playing) — all boards equal
+        for (const pid of playerIds) {
+            const idx = state.boards.length;
+            state.boards.push(state.allBoards[pid]);
+            const info = state.onlinePlayers.find(p => p.id === pid);
+            state.players.push(info ? info.name : pid);
+            state._boardIdMap[idx] = pid;
+            state._boardIndexMap[pid] = idx;
+        }
+    }
+
+    state.playerCount = state.boards.length;
+
+    // Show game screen
+    document.getElementById('lobby-screen').classList.add('hidden');
+    document.getElementById('setup-screen').classList.add('hidden');
+    document.getElementById('game-screen').classList.remove('hidden');
+    document.getElementById('win-overlay').classList.add('hidden');
+
+    // Caller section visibility
+    const callerSection = document.querySelector('.caller-section');
+    if (state.role === 'moderator') {
+        callerSection.classList.remove('hidden');
+    } else {
+        callerSection.classList.add('hidden');
+    }
+
+    renderGame();
+    renderOnlineStatusBanner();
+
+    document.getElementById('random-btn').disabled = false;
+    document.getElementById('replay-btn').classList.add('hidden');
+    document.getElementById('reveal-btn').classList.add('hidden');
+    setVoiceStatus(t('statusReady'), '', 'statusReady');
+}
+
+function renderOnlineStatusBanner() {
+    if (state.gameType !== 'online' || state.role === 'moderator') return;
+
+    let banner = document.getElementById('online-status-banner');
+    if (!banner) {
+        banner = document.createElement('div');
+        banner.className = 'status-banner';
+        banner.id = 'online-status-banner';
+        const gameScreen = document.getElementById('game-screen');
+        gameScreen.insertBefore(banner, gameScreen.firstChild);
+    }
+
+    if (state.pendingChar) {
+        banner.textContent = t('statusSelectYourCell');
+        banner.className = 'status-banner selecting';
+    } else if (state.currentChar) {
+        banner.textContent = t('statusCharRevealed');
+        banner.className = 'status-banner revealed';
+    } else {
+        banner.textContent = t('statusModeratorRandomizing');
+        banner.className = 'status-banner pending';
+    }
+}
+
+function onlineRandomized(pendingChar) {
+    // Moderator receives the actual char
+    state.pendingChar = pendingChar;
+    state.pendingSelections = {};
+
+    const charEl = document.getElementById('current-char');
+    const display = document.getElementById('caller-display');
+    charEl.textContent = '?';
+    display.classList.remove('has-char');
+
+    speakChar(pendingChar);
+
+    document.getElementById('random-btn').disabled = true;
+    document.getElementById('replay-btn').classList.remove('hidden');
+    document.getElementById('reveal-btn').classList.remove('hidden');
+    setVoiceStatus(t('statusPending'), '', 'statusPending');
+}
+
+function onlineCharPending() {
+    // Players know a char is pending — they can select
+    state.pendingChar = '__hidden__';  // truthy but unknown
+    state.pendingSelections = {};
+    renderOnlineStatusBanner();
+}
+
+function onlineRevealed(msg) {
+    const char = msg.char;
+    state.pendingChar = null;
+    state.calledChars = msg.calledChars;
+    state.currentChar = char;
+
+    // Update caller display
+    const display = document.getElementById('caller-display');
+    const charEl = document.getElementById('current-char');
+    charEl.textContent = char;
+    display.classList.remove('pop', 'has-char');
+    void display.offsetWidth;
+    display.classList.add('pop', 'has-char');
+    document.getElementById('draw-count').textContent = state.calledChars.length;
+    sfxCall();
+    renderCalledHistory();
+
+    // Process selection results
+    const selections = msg.selections || {};
+    for (const [playerId, result] of Object.entries(selections)) {
+        const pi = state._boardIndexMap[playerId];
+        if (pi === undefined) continue;
+        const el = document.getElementById(`cell-${pi}-${result.r}-${result.c}`);
+        if (!el) continue;
+
+        if (result.valid) {
+            state.boards[pi][result.r][result.c].marked = true;
+            el.classList.remove('selected', 'hint-pulse');
+            el.classList.add('marked', 'mark-anim');
+            el.onclick = null;
+            sfxMark();
+            setTimeout(() => el.classList.remove('mark-anim'), 400);
+        } else {
+            el.classList.remove('selected');
+            el.classList.add('wrong');
+            sfxWrong();
+            setTimeout(() => el.classList.remove('wrong'), 350);
+        }
+    }
+
+    // Clear local pending selections
+    state.pendingSelections = {};
+
+    // Re-enable moderator buttons
+    if (state.role === 'moderator') {
+        document.getElementById('reveal-btn').classList.add('hidden');
+        document.getElementById('replay-btn').classList.add('hidden');
+        const remaining = state.gamePool.filter(ch => !state.calledChars.includes(ch));
+        document.getElementById('random-btn').disabled = remaining.length === 0;
+        setVoiceStatus(remaining.length > 0 ? t('statusNext') : t('statusEmpty'), remaining.length > 0 ? 'success' : '', remaining.length > 0 ? 'statusNext' : 'statusEmpty');
+    }
+
+    updateHints();
+    renderOnlineStatusBanner();
+}
+
+function onlineMarkResult(msg) {
+    const pi = state._boardIndexMap[msg.playerId];
+    if (pi === undefined) return;
+    const el = document.getElementById(`cell-${pi}-${msg.r}-${msg.c}`);
+    if (!el) return;
+
+    if (msg.valid) {
+        state.boards[pi][msg.r][msg.c].marked = true;
+        el.classList.remove('hint-pulse');
+        el.classList.add('marked', 'mark-anim');
+        el.onclick = null;
+        if (msg.playerId === state.playerId) sfxMark();
+        setTimeout(() => el.classList.remove('mark-anim'), 400);
+    } else {
+        if (msg.playerId === state.playerId) {
+            el.classList.add('wrong');
+            sfxWrong();
+            setTimeout(() => el.classList.remove('wrong'), 350);
+        }
+    }
+    updateHints();
+}
+
+function onlineWin(msg) {
+    sfxWin();
+    const pi = state._boardIndexMap[msg.playerId];
+    if (pi !== undefined && msg.winLine) {
+        msg.winLine.forEach(([r, c]) => {
+            const el = document.getElementById(`cell-${pi}-${r}-${c}`);
+            if (el) el.classList.add('win-glow');
+        });
+    }
+    state.winners.push(msg.playerId);
+
+    setTimeout(() => {
+        if (charVoiceover) { charVoiceover.pause(); charVoiceover.currentTime = 0; }
+        document.getElementById('winner-name').textContent = msg.playerName;
+        document.getElementById('win-overlay').classList.remove('hidden');
+        startConfetti();
+    }, 500);
+}
+
+// ============================================================
 // INIT
 // ============================================================
+
+// Auto-switch to online join mode if ?room= is in URL
+(function() {
+    const urlRoom = new URLSearchParams(location.search).get('room');
+    if (urlRoom) {
+        state.gameType = 'online';
+        state.onlineRole = 'join';
+    }
+})();
+
 applyLang();
 </script>
 </body>
