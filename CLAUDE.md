@@ -61,6 +61,21 @@ Cloudflare Worker + Durable Object for multiplayer WebSocket API.
 Client → Server: `start`, `randomize`, `reveal`, `select`, `mark`
 Server → Client: `joined`, `player_joined`, `player_disconnected`, `player_reconnected`, `moderator_disconnected`, `game_start`, `randomized`, `char_pending`, `revealed`, `mark_result`, `win`, `error`
 
+#### Online Turn Flow
+
+1. Moderator clicks randomize → server picks char, sends `randomized` (with char) to moderator, `char_pending` to players
+2. Moderator speaks char aloud (or via audio). Players select a cell on their board → `select` stored server-side
+3. Moderator clicks reveal → server broadcasts `revealed` with char + validated selections, checks wins
+
+#### Board Visibility
+
+| View                    | Own board      | Other boards   | Caller controls |
+|-------------------------|----------------|----------------|-----------------|
+| Local                   | All equal      | All equal      | Shared          |
+| Moderator (not playing) | N/A            | All equal      | Yes             |
+| Moderator (playing)     | Large, primary | Smaller, below | Yes             |
+| Player                  | Large, primary | Smaller, below | No              |
+
 ## Hosting
 
 - Client: GitHub Pages at `https://erks.github.io/thai-bingo/`
