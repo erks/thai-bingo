@@ -9,12 +9,22 @@ Thai Bingo (บิงโกภาษาไทย) — a web app for learning Tha
 ## Development
 
 - **Quick start:** `make install && make dev` — runs both client and worker locally.
+- **Type-check:** `make` or `make fmt` — runs TypeScript type-checking (default target).
 - **Client only:** `make client` (or open `index.html` directly). No build step.
 - **Worker only:** `make worker` (or `cd worker && npx wrangler dev`).
 - **Install deps:** `make install` — installs worker npm dependencies.
-- **Deploy worker:** `cd worker && npx wrangler deploy`
+- **Deploy worker:** `cd worker && npx wrangler deploy` (or push to main for auto-deploy via CI/CD).
 - **Clean up:** `make clean` — kills any dangling dev processes on ports 3000/8787.
-- There are no tests or linting configured.
+
+## CI/CD
+
+GitHub Actions workflows automatically run checks and deployments:
+
+- **PR Check (`.github/workflows/pr-check.yml`)** — Runs `make fmt` on all PRs to `main`. Must pass before merge.
+- **Deploy Worker (`.github/workflows/deploy-worker.yml`)** — On push to `main` (when `worker/**` changes):
+  1. Runs `make fmt` to type-check
+  2. Deploys to Cloudflare Workers if checks pass
+  3. Requires `CLOUDFLARE_API_TOKEN` secret configured in repo settings
 
 ## Architecture
 

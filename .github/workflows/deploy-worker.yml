@@ -16,6 +16,8 @@ jobs:
           node-version: 22
       - run: npm ci
         working-directory: worker
+      - name: Type-check before deploy
+        run: make fmt
       - run: npx wrangler deploy
         working-directory: worker
         env:

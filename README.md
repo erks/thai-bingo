@@ -47,12 +47,15 @@ Speech debug output is logged to the browser console (`F12` → Console).
 ## Development
 
 ```sh
+make           # type-check TypeScript (runs automatically on PRs)
 make install   # install worker dependencies
 make dev       # run client (port 3000) + worker (port 8787)
 make client    # run client only
 make worker    # run worker only
 make clean     # kill dangling dev processes
 ```
+
+**CI/CD:** TypeScript type-checking runs automatically on PRs and before deployment. Worker is auto-deployed to Cloudflare on push to `main`.
 
 ## Requirements
 
