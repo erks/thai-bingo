@@ -8,9 +8,12 @@ Thai Bingo (บิงโกภาษาไทย) — a web app for learning Tha
 
 ## Development
 
-- **Client:** Open `index.html` directly in a browser (or serve via any static server). No build step.
-- **Worker:** `cd worker && npm install && npx wrangler dev --local` to run the multiplayer API locally on port 8787.
+- **Quick start:** `make install && make dev` — runs both client and worker locally.
+- **Client only:** `make client` (or open `index.html` directly). No build step.
+- **Worker only:** `make worker` (or `cd worker && npx wrangler dev`).
+- **Install deps:** `make install` — installs worker npm dependencies.
 - **Deploy worker:** `cd worker && npx wrangler deploy`
+- **Clean up:** `make clean` — kills any dangling dev processes on ports 3000/8787.
 - There are no tests or linting configured.
 
 ## Architecture

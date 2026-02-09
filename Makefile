@@ -6,9 +6,9 @@ WORKER_PORT ?= 8787
 # Start both client and worker; Ctrl+C stops everything
 dev:
 	@echo "Starting client on http://localhost:$(CLIENT_PORT) and worker on http://localhost:$(WORKER_PORT)..."
-	@trap 'kill 0' EXIT; \
+	@trap 'kill 0; exit 0' INT TERM; \
 	python3 -m http.server $(CLIENT_PORT) -b 127.0.0.1 & \
-	cd worker && npx wrangler dev --port $(WORKER_PORT) & \
+	(cd worker && npx wrangler dev --port $(WORKER_PORT)) & \
 	wait
 
 # Start only the static file server for the client

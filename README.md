@@ -44,6 +44,16 @@ Speech debug output is logged to the browser console (`F12` → Console).
 
 **Note:** Voice input requires a secure context. Open via `localhost` (e.g. `python3 -m http.server 8000`) rather than `file://`. If speech is unavailable, the game falls back to manual picker mode.
 
+## Development
+
+```sh
+make install   # install worker dependencies
+make dev       # run client (port 3000) + worker (port 8787)
+make client    # run client only
+make worker    # run worker only
+make clean     # kill dangling dev processes
+```
+
 ## Requirements
 
 - A modern browser (Chrome/Edge recommended for Web Speech API)
