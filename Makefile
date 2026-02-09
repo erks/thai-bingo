@@ -1,0 +1,30 @@
+.PHONY: dev client worker install clean
+
+CLIENT_PORT ?= 3000
+WORKER_PORT ?= 8787
+
+# Start both client and worker; Ctrl+C stops everything
+dev:
+	@echo "Starting client on http://localhost:$(CLIENT_PORT) and worker on http://localhost:$(WORKER_PORT)..."
+	@trap 'kill 0' EXIT; \
+	python3 -m http.server $(CLIENT_PORT) -b 127.0.0.1 & \
+	cd worker && npx wrangler dev --port $(WORKER_PORT) & \
+	wait
+
+# Start only the static file server for the client
+client:
+	python3 -m http.server $(CLIENT_PORT) -b 127.0.0.1
+
+# Start only the Cloudflare Worker locally
+worker:
+	cd worker && npx wrangler dev --port $(WORKER_PORT)
+
+# Install worker dependencies
+install:
+	cd worker && npm install
+
+# Kill any dangling dev processes on CLIENT_PORT and WORKER_PORT
+clean:
+	@echo "Cleaning up dangling processes..."
+	@lsof -ti :$(CLIENT_PORT) | xargs kill 2>/dev/null && echo "Killed process(es) on port $(CLIENT_PORT)" || echo "Nothing on port $(CLIENT_PORT)"
+	@lsof -ti :$(WORKER_PORT) | xargs kill 2>/dev/null && echo "Killed process(es) on port $(WORKER_PORT)" || echo "Nothing on port $(WORKER_PORT)"
