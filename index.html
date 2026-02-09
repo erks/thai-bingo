@@ -258,6 +258,18 @@
         }
         .ctrl-btn:hover { background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.6); }
 
+        /* ====== LANGUAGE TOGGLE ====== */
+        .lang-toggle {
+            position: absolute; top: 12px; right: 12px;
+            padding: 4px 12px; border: 2px solid #e5e7eb; border-radius: 20px;
+            background: white; font-family: inherit; font-size: 0.8rem; font-weight: 700;
+            color: #6b7280; cursor: pointer; transition: all 0.2s;
+        }
+        .lang-toggle:hover { border-color: #a78bfa; color: #7c3aed; }
+        .setup-container { position: relative; }
+        .bottom-controls .lang-toggle { position: static; background: rgba(255,255,255,0.15); color: white; border-color: rgba(255,255,255,0.4); }
+        .bottom-controls .lang-toggle:hover { background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.6); }
+
         /* ====== WIN OVERLAY ====== */
         .win-overlay {
             position: fixed; inset: 0; z-index: 1000;
@@ -310,30 +322,31 @@
 <!-- ====== SETUP SCREEN ====== -->
 <div id="setup-screen" class="screen">
     <div class="setup-container">
-        <h1>🎯 บิงโกภาษาไทย</h1>
-        <p class="subtitle">เรียนรู้ตัวอักษรไทยแสนสนุก!</p>
+        <button class="lang-toggle" onclick="setLang(state.lang==='th'?'en':'th')">EN</button>
+        <h1>🎯 <span data-i18n="title">บิงโกภาษาไทย</span></h1>
+        <p class="subtitle" data-i18n="subtitle">เรียนรู้ตัวอักษรไทยแสนสนุก!</p>
 
         <div class="setup-section">
-            <label>จำนวนผู้เล่น</label>
+            <label data-i18n="playerCount">จำนวนผู้เล่น</label>
             <div class="btn-group" id="player-count-btns"></div>
         </div>
 
         <div class="setup-section">
-            <label>ชื่อผู้เล่น</label>
+            <label data-i18n="playerNames">ชื่อผู้เล่น</label>
             <div class="name-inputs-container" id="name-inputs"></div>
         </div>
 
         <div class="setup-section">
-            <label>โหมด</label>
+            <label data-i18n="mode">โหมด</label>
             <div class="btn-group" id="mode-btns"></div>
         </div>
 
         <div class="hint-toggle">
             <input type="checkbox" id="hints-check" checked>
-            <label for="hints-check">เปิดคำใบ้ (ช่องที่ตรงจะกระพริบ)</label>
+            <label for="hints-check" data-i18n="hintsLabel">เปิดคำใบ้ (ช่องที่ตรงจะกระพริบ)</label>
         </div>
 
-        <button class="start-button" onclick="startGame()">เริ่มเกม! 🎮</button>
+        <button class="start-button" onclick="startGame()" data-i18n="startGame">เริ่มเกม! 🎮</button>
     </div>
 </div>
 
@@ -345,10 +358,10 @@
             <div class="voice-panel">
                 <button class="randomize-button" id="random-btn" onclick="randomizeChar()">🎲</button>
                 <div style="display:flex; gap:8px;">
-                    <button class="replay-button hidden" id="replay-btn" onclick="replayChar()">🔊 ฟังอีกครั้ง</button>
-                    <button class="reveal-button hidden" id="reveal-btn" onclick="revealChar()">เฉลย</button>
+                    <button class="replay-button hidden" id="replay-btn" onclick="replayChar()" data-i18n="replay">🔊 ฟังอีกครั้ง</button>
+                    <button class="reveal-button hidden" id="reveal-btn" onclick="revealChar()" data-i18n="reveal">เฉลย</button>
                 </div>
-                <div class="voice-status" id="voice-status">กดสุ่มเพื่อเริ่ม</div>
+                <div class="voice-status" id="voice-status" data-status-key="statusReady">กดสุ่มเพื่อเริ่ม</div>
             </div>
 
             <!-- Current character display -->
@@ -370,8 +383,9 @@
     <div id="boards-container" class="boards-container"></div>
 
     <div class="bottom-controls">
-        <button class="ctrl-btn" onclick="backToSetup()">⚙️ ตั้งค่า</button>
-        <button class="ctrl-btn" onclick="resetGame()">🔄 เกมใหม่</button>
+        <button class="ctrl-btn" onclick="backToSetup()" data-i18n="settings">⚙️ ตั้งค่า</button>
+        <button class="ctrl-btn" onclick="resetGame()" data-i18n="newGame">🔄 เกมใหม่</button>
+        <button class="ctrl-btn lang-toggle" onclick="setLang(state.lang==='th'?'en':'th')">EN</button>
     </div>
 </div>
 
@@ -379,11 +393,11 @@
 <div id="win-overlay" class="win-overlay hidden">
     <canvas id="confetti-canvas"></canvas>
     <div class="win-content">
-        <h2>🎉 บิงโก! 🎉</h2>
+        <h2 data-i18n="bingo">🎉 บิงโก! 🎉</h2>
         <p class="winner-name" id="winner-name"></p>
         <div class="win-buttons">
-            <button onclick="continueAfterWin()">เล่นต่อ</button>
-            <button onclick="resetGame()">เกมใหม่</button>
+            <button onclick="continueAfterWin()" data-i18n="continue">เล่นต่อ</button>
+            <button onclick="resetGame()" data-i18n="newGame">เกมใหม่</button>
         </div>
     </div>
 </div>
@@ -486,13 +500,92 @@ const VOWEL_SPEECH = [
 const ALL_SPEECH = [...CONSONANT_SPEECH, ...VOWEL_SPEECH];
 
 const PLAYER_COLORS = ['#4361ee', '#e84393', '#00b894', '#f39c12'];
-const PLAYER_NAMES_DEFAULT = ['ผู้เล่น 1', 'ผู้เล่น 2', 'ผู้เล่น 3', 'ผู้เล่น 4'];
 const GAME_POOL_SIZES = { consonants: 35, vowels: 24, mixed: 42 };
+
+// ============================================================
+// I18N
+// ============================================================
+const STRINGS = {
+    th: {
+        title: 'บิงโกภาษาไทย',
+        subtitle: 'เรียนรู้ตัวอักษรไทยแสนสนุก!',
+        playerCount: 'จำนวนผู้เล่น',
+        playerNames: 'ชื่อผู้เล่น',
+        mode: 'โหมด',
+        modeConsonants: 'พยัญชนะ',
+        modeVowels: 'สระ',
+        modeMixed: 'ผสม',
+        hintsLabel: 'เปิดคำใบ้ (ช่องที่ตรงจะกระพริบ)',
+        startGame: 'เริ่มเกม! 🎮',
+        playerUnit: 'คน',
+        defaultPlayer: 'ผู้เล่น',
+        replay: '🔊 ฟังอีกครั้ง',
+        reveal: 'เฉลย',
+        settings: '⚙️ ตั้งค่า',
+        newGame: '🔄 เกมใหม่',
+        bingo: '🎉 บิงโก! 🎉',
+        continue: 'เล่นต่อ',
+        statusReady: 'กดสุ่มเพื่อเริ่ม',
+        statusPending: 'กด เฉลย เพื่อเปิด หรือ ฟังอีกครั้ง',
+        statusNext: 'กดสุ่มเพื่อเรียกตัวถัดไป',
+        statusEmpty: 'หมดตัวอักษรแล้ว',
+    },
+    en: {
+        title: 'Thai Alphabet Bingo',
+        subtitle: 'Learn Thai letters through bingo!',
+        playerCount: 'Number of players',
+        playerNames: 'Player names',
+        mode: 'Mode',
+        modeConsonants: 'Consonants',
+        modeVowels: 'Vowels',
+        modeMixed: 'Mixed',
+        hintsLabel: 'Enable hints (matching cells pulse)',
+        startGame: 'Start Game! 🎮',
+        playerUnit: 'players',
+        defaultPlayer: 'Player',
+        replay: '🔊 Replay',
+        reveal: 'Reveal',
+        settings: '⚙️ Settings',
+        newGame: '🔄 New Game',
+        bingo: '🎉 Bingo! 🎉',
+        continue: 'Continue',
+        statusReady: 'Press randomize to start',
+        statusPending: 'Press Reveal or Replay',
+        statusNext: 'Press randomize for next',
+        statusEmpty: 'No characters left',
+    }
+};
+
+function t(key) { return STRINGS[state.lang][key]; }
+
+function setLang(lang) {
+    state.lang = lang;
+    localStorage.setItem('lang', lang);
+    applyLang();
+}
+
+function applyLang() {
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        el.textContent = t(el.dataset.i18n);
+    });
+    // Re-render dynamic setup buttons
+    initSetup();
+    // Update lang toggle labels
+    document.querySelectorAll('.lang-toggle').forEach(btn => {
+        btn.textContent = state.lang === 'th' ? 'EN' : 'TH';
+    });
+    // Re-translate voice status if a key is stored
+    const vs = document.getElementById('voice-status');
+    if (vs && vs.dataset.statusKey) {
+        vs.textContent = t(vs.dataset.statusKey);
+    }
+}
 
 // ============================================================
 // STATE
 // ============================================================
 let state = {
+    lang: localStorage.getItem('lang') || 'th',
     playerCount: 2,
     mode: 'mixed',
     hintsOn: true,
@@ -570,7 +663,7 @@ function randomizeChar() {
 
     const remaining = state.gamePool.filter(ch => !state.calledChars.includes(ch));
     if (remaining.length === 0) {
-        setVoiceStatus('หมดตัวอักษรแล้ว', 'error');
+        setVoiceStatus(t('statusEmpty'), 'error', 'statusEmpty');
         document.getElementById('random-btn').disabled = true;
         return;
     }
@@ -589,7 +682,7 @@ function randomizeChar() {
     document.getElementById('random-btn').disabled = true;
     document.getElementById('replay-btn').classList.remove('hidden');
     document.getElementById('reveal-btn').classList.remove('hidden');
-    setVoiceStatus('กด เฉลย เพื่อเปิด หรือ ฟังอีกครั้ง', '');
+    setVoiceStatus(t('statusPending'), '', 'statusPending');
 }
 
 function replayChar() {
@@ -627,17 +720,18 @@ function revealChar() {
     const remaining = state.gamePool.filter(ch => !state.calledChars.includes(ch));
     if (remaining.length > 0) {
         document.getElementById('random-btn').disabled = false;
-        setVoiceStatus('กดสุ่มเพื่อเรียกตัวถัดไป', 'success');
+        setVoiceStatus(t('statusNext'), 'success', 'statusNext');
     } else {
         document.getElementById('random-btn').disabled = true;
-        setVoiceStatus('หมดตัวอักษรแล้ว', '');
+        setVoiceStatus(t('statusEmpty'), '', 'statusEmpty');
     }
 }
 
-function setVoiceStatus(text, type) {
+function setVoiceStatus(text, type, i18nKey) {
     const el = document.getElementById('voice-status');
     el.textContent = text;
     el.className = 'voice-status' + (type ? ' ' + type : '');
+    if (i18nKey) el.dataset.statusKey = i18nKey;
 }
 
 // ============================================================
@@ -673,7 +767,7 @@ function initSetup() {
     pcContainer.innerHTML = '';
     [2, 3, 4].forEach(n => {
         const btn = document.createElement('button');
-        btn.textContent = n + ' คน';
+        btn.textContent = n + ' ' + t('playerUnit');
         btn.className = n === state.playerCount ? 'active' : '';
         btn.onclick = () => { state.playerCount = n; initSetup(); };
         pcContainer.appendChild(btn);
@@ -689,7 +783,7 @@ function initSetup() {
         dot.style.background = PLAYER_COLORS[i];
         const input = document.createElement('input');
         input.type = 'text';
-        input.placeholder = PLAYER_NAMES_DEFAULT[i];
+        input.placeholder = t('defaultPlayer') + ' ' + (i + 1);
         input.id = 'name-' + i;
         if (state.players[i]) input.value = state.players[i];
         row.appendChild(dot);
@@ -699,9 +793,9 @@ function initSetup() {
 
     const modeContainer = document.getElementById('mode-btns');
     modeContainer.innerHTML = '';
-    [{ key: 'consonants', label: 'พยัญชนะ' }, { key: 'vowels', label: 'สระ' }, { key: 'mixed', label: 'ผสม' }].forEach(m => {
+    [{ key: 'consonants', i18n: 'modeConsonants' }, { key: 'vowels', i18n: 'modeVowels' }, { key: 'mixed', i18n: 'modeMixed' }].forEach(m => {
         const btn = document.createElement('button');
-        btn.textContent = m.label;
+        btn.textContent = t(m.i18n);
         btn.className = m.key === state.mode ? 'active' : '';
         btn.onclick = () => { state.mode = m.key; initSetup(); };
         modeContainer.appendChild(btn);
@@ -717,7 +811,7 @@ function startGame() {
     state.players = [];
     for (let i = 0; i < state.playerCount; i++) {
         const input = document.getElementById('name-' + i);
-        state.players.push(input && input.value.trim() ? input.value.trim() : PLAYER_NAMES_DEFAULT[i]);
+        state.players.push(input && input.value.trim() ? input.value.trim() : t('defaultPlayer') + ' ' + (i + 1));
     }
     state.hintsOn = document.getElementById('hints-check').checked;
 
@@ -751,7 +845,7 @@ function startGame() {
     document.getElementById('random-btn').disabled = false;
     document.getElementById('replay-btn').classList.add('hidden');
     document.getElementById('reveal-btn').classList.add('hidden');
-    setVoiceStatus('กดสุ่มเพื่อเริ่ม', '');
+    setVoiceStatus(t('statusReady'), '', 'statusReady');
 }
 
 function generateBoard(pool) {
@@ -1016,7 +1110,7 @@ function stopConfetti() {
 // ============================================================
 // INIT
 // ============================================================
-initSetup();
+applyLang();
 </script>
 </body>
 </html>
