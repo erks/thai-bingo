@@ -1,8 +1,12 @@
 # บิงโกภาษาไทย (Thai Bingo)
 
-A web-based bingo game for learning Thai alphabet characters — consonants, vowels, or both.
+A web-based bingo game for learning Thai alphabet characters — consonants, vowels, or both. Play locally on one screen or online with friends.
+
+**Play now:** https://erks.github.io/thai-bingo/
 
 ## How to Play
+
+### Local Mode
 
 1. **Open `index.html`** in a browser (or serve via `python3 -m http.server` for voice input support)
 2. **Set up** — choose player count (2–4), enter names, and select a mode:
@@ -15,6 +19,15 @@ A web-based bingo game for learning Thai alphabet characters — consonants, vow
 4. **Players guess** — after a character is called, boards are revealed and each player selects the cell they think matches
 5. **Reveal** — click "เฉลย" to show the called character. Correct guesses are marked; wrong guesses are rejected.
 6. **Bingo!** — first player to complete a row, column, or diagonal wins
+
+### Online Mode
+
+1. Select **Online** on the setup screen
+2. **Moderator** creates a room — picks a mode, optionally checks "I'm playing too", and gets a 6-character room code
+3. **Players** join by entering the room code (or clicking a shared link)
+4. Moderator starts the game, randomizes characters, and reveals them
+5. Players select cells on their own board before each reveal — correct guesses are marked automatically
+6. Everyone sees all boards update in real time
 
 ## Voice Input
 
@@ -34,4 +47,5 @@ Speech debug output is logged to the browser console (`F12` → Console).
 ## Requirements
 
 - A modern browser (Chrome/Edge recommended for Web Speech API)
-- No build step, dependencies, or server required for manual mode
+- No build step, dependencies, or server required for local mode
+- Online mode requires the Cloudflare Worker backend (auto-deployed via GitHub Actions)
