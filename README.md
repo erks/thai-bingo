@@ -50,6 +50,13 @@ make clean     # kill dangling dev processes
 - **PR checks:** type-checking, tests, and build run automatically on all PRs
 - **Deploy:** worker auto-deploys to Cloudflare, client auto-deploys to GitHub Pages on push to `main`
 
+### Initial Setup
+
+After cloning, two secrets/settings are needed for CI/CD:
+
+1. **Cloudflare Worker:** add a `CLOUDFLARE_API_TOKEN` secret in repo settings (Settings → Secrets and variables → Actions)
+2. **GitHub Pages:** go to Settings → Pages → Build and deployment → Source, and select **"GitHub Actions"** (instead of "Deploy from a branch")
+
 ## Requirements
 
 - A modern browser (Chrome/Edge recommended for audio features)
