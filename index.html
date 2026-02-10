@@ -451,7 +451,7 @@
 <!-- ====== SETUP SCREEN ====== -->
 <div id="setup-screen" class="screen">
     <div class="setup-container">
-        <button class="lang-toggle" onclick="setLang(state.lang==='th'?'en':'th')">EN</button>
+        <button class="lang-toggle" onclick="cycleLang()">EN</button>
         <h1>🎯 <span data-i18n="title">บิงโกภาษาไทย</span></h1>
         <p class="subtitle" data-i18n="subtitle">เรียนรู้ตัวอักษรไทยแสนสนุก!</p>
 
@@ -534,7 +534,7 @@
     <div class="bottom-controls">
         <button class="ctrl-btn" onclick="backToSetup()" data-i18n="settings">⚙️ ตั้งค่า</button>
         <button class="ctrl-btn" onclick="resetGame()" data-i18n="newGame">🔄 เกมใหม่</button>
-        <button class="ctrl-btn lang-toggle" onclick="setLang(state.lang==='th'?'en':'th')">EN</button>
+        <button class="ctrl-btn lang-toggle" onclick="cycleLang()">EN</button>
     </div>
 </div>
 
@@ -702,10 +702,81 @@ const STRINGS = {
         errorRoomNotFound: 'Room not found',
         errorConnection: 'Connection failed',
         connecting: 'Connecting...',
+    },
+    ja: {
+        title: 'タイ文字ビンゴ',
+        subtitle: 'ビンゴでタイ文字を楽しく学ぼう！',
+        playerCount: 'プレイヤー数',
+        playerNames: 'プレイヤー名',
+        mode: 'モード',
+        modeConsonants: '子音',
+        modeVowels: '母音',
+        modeMixed: 'ミックス',
+        hintsLabel: 'ヒントを有効にする（一致するマスが点滅）',
+        startGame: 'ゲーム開始！ 🎮',
+        playerUnit: '人',
+        defaultPlayer: 'プレイヤー',
+        replay: '🔊 もう一度',
+        reveal: '答え合わせ',
+        settings: '⚙️ 設定',
+        newGame: '🔄 新しいゲーム',
+        bingo: '🎉 ビンゴ！ 🎉',
+        continue: '続ける',
+        statusReady: 'ランダムを押して開始',
+        statusPending: '答え合わせ または もう一度 を押す',
+        statusNext: 'ランダムを押して次へ',
+        statusEmpty: '文字がありません',
+        // Online mode
+        gameTypeLocal: 'ローカル',
+        gameTypeOnline: 'オンライン',
+        gameType: 'ゲームタイプ',
+        createRoom: 'ルーム作成',
+        joinRoom: '参加する',
+        onlineRole: '役割',
+        moderatorName: 'あなたの名前',
+        moderatorPlays: '自分もプレイする',
+        createRoomBtn: 'ルーム作成',
+        roomCodeLabel: 'ルームコード',
+        roomCodePlaceholder: '例: A3BK7P',
+        joinName: 'あなたの名前',
+        joinBtn: '参加',
+        yourRoom: 'あなたのルーム',
+        shareLink: 'リンクを共有',
+        copyLink: 'コピー',
+        linkCopied: 'コピーしました！',
+        waitingForPlayers: 'プレイヤーを待っています...',
+        lobbyPlayerCount: '{n}人が参加中',
+        startGameOnline: 'ゲーム開始！',
+        playersJoined: 'プレイヤー',
+        minPlayersNeeded: '1人以上のプレイヤーが必要です',
+        you: 'あなた',
+        waitingForModerator: '司会者の開始を待っています...',
+        youJoinedAs: '参加名',
+        statusModeratorRandomizing: '司会者が選んでいます...',
+        statusSelectYourCell: 'マスを選んでください！',
+        statusWaitingReveal: '答え合わせを待っています...',
+        statusCharRevealed: '発表されました！',
+        readyBtn: '🙋 準備OK！',
+        readyStatus: '準備完了',
+        playersReady: '{n}/{total}人が準備完了',
+        playerDisconnected: '切断されました',
+        moderatorDisconnected: '司会者が切断されました',
+        reconnecting: '再接続中...',
+        errorRoomNotFound: 'ルームが見つかりません',
+        errorConnection: '接続に失敗しました',
+        connecting: '接続中...',
     }
 };
 
 function t(key) { return STRINGS[state.lang][key]; }
+
+const LANGS = ['th', 'en', 'ja'];
+const LANG_LABELS = { th: 'TH', en: 'EN', ja: 'JA' };
+
+function cycleLang() {
+    const i = LANGS.indexOf(state.lang);
+    setLang(LANGS[(i + 1) % LANGS.length]);
+}
 
 function setLang(lang) {
     state.lang = lang;
@@ -719,9 +790,10 @@ function applyLang() {
     });
     // Re-render dynamic setup buttons
     initSetup();
-    // Update lang toggle labels
+    // Update lang toggle labels — show next language
+    const nextLang = LANGS[(LANGS.indexOf(state.lang) + 1) % LANGS.length];
     document.querySelectorAll('.lang-toggle').forEach(btn => {
-        btn.textContent = state.lang === 'th' ? 'EN' : 'TH';
+        btn.textContent = LANG_LABELS[nextLang];
     });
     // Re-translate voice status if a key is stored
     const vs = document.getElementById('voice-status');

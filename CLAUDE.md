@@ -44,7 +44,14 @@ Single-file HTML + CSS + vanilla JS (no build step, no dependencies beyond Googl
 
 #### i18n
 
-All UI text uses `t(key)` with `STRINGS.th` and `STRINGS.en`. Use `data-i18n` attributes for static HTML elements. Use "Moderator" (not "Teacher") for the caller role; Thai: "ผู้ดำเนินเกม".
+All UI text uses `t(key)` with `STRINGS.th`, `STRINGS.en`, and `STRINGS.ja`. Use `data-i18n` attributes for static HTML elements. Use "Moderator" (not "Teacher") for the caller role; Thai: "ผู้ดำเนินเกม", Japanese: "司会者".
+
+**Adding a new language:**
+
+1. Add a new `STRINGS.<code>` object in `index.html` with all keys (copy an existing language block as template)
+2. Append the language code to the `LANGS` array (e.g. `['th', 'en', 'ja', 'ko']`)
+3. Add an entry to `LANG_LABELS` (e.g. `ko: 'KO'`)
+4. The language toggle button automatically cycles through all entries in `LANGS`
 
 #### Online Mode Client State
 
