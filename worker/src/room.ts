@@ -337,7 +337,7 @@ export class BingoRoom implements DurableObject {
   private async handleStart(senderId: string, senderRole: string, moderatorPlaying?: boolean): Promise<void> {
     if (!this.room) return;
     if (senderRole !== "moderator" || senderId !== this.room.moderatorId) return;
-    if (this.room.phase !== "lobby") return;
+    if (this.room.phase !== "lobby" && this.room.phase !== "playing") return;
 
     // Update moderatorPlaying from client if provided
     if (moderatorPlaying !== undefined) {

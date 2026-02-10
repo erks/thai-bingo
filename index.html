@@ -1499,6 +1499,12 @@ function resetGame() {
     stopConfetti();
     if (charVoiceover) { charVoiceover.pause(); charVoiceover.currentTime = 0; }
     document.getElementById('win-overlay').classList.add('hidden');
+    if (state.gameType === 'online') {
+        if (state.role === 'moderator') {
+            wsSend({ type: 'start', moderatorPlaying: state.moderatorPlaying });
+        }
+        return;
+    }
     startGame();
 }
 
