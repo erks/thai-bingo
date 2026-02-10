@@ -11,7 +11,7 @@ tag = "v1"
 new_sqlite_classes = ["BingoRoom"]
 
 [observability]
-enabled = false
+enabled = true
 head_sampling_rate = 1
 
 [observability.logs]

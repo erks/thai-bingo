@@ -27,6 +27,11 @@
 
         .screen { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
         .hidden { display: none !important; }
+        .connection-banner {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+            background: #f59e0b; color: #000; text-align: center;
+            padding: 6px 12px; font-size: 14px; font-weight: 600;
+        }
 
         /* ====== SETUP SCREEN ====== */
         .setup-container {
@@ -478,6 +483,9 @@
         <button class="start-button" onclick="startGame()" data-i18n="startGame">เริ่มเกม! 🎮</button>
     </div>
 </div>
+
+<!-- ====== CONNECTION STATUS ====== -->
+<div id="connection-status" class="connection-banner hidden">⟳ Reconnecting…</div>
 
 <!-- ====== LOBBY SCREEN ====== -->
 <div id="lobby-screen" class="screen hidden">
@@ -1737,9 +1745,19 @@ function connectWebSocket() {
     });
     const url = `${wsBase}/api/room/${state.roomCode}/websocket?${params}`;
     const ws = new WebSocket(url);
+    state._wsConnecting = true;
 
     ws.onopen = () => {
+        console.log('[ws] connected');
         state.ws = ws;
+        state._wsConnecting = false;
+        // Flush any messages queued during reconnect
+        if (state._wsSendQueue && state._wsSendQueue.length > 0) {
+            const queue = state._wsSendQueue;
+            state._wsSendQueue = [];
+            queue.forEach(m => wsSend(m));
+        }
+        updateConnectionStatus(true);
     };
 
     ws.onmessage = (event) => {
@@ -1748,14 +1766,17 @@ function connectWebSocket() {
     };
 
     ws.onclose = () => {
+        console.log('[ws] disconnected');
         state.ws = null;
-        // Try reconnect after 2s if still in online mode
+        state._wsConnecting = false;
+        updateConnectionStatus(false);
+        // Try reconnect after 1s if still in online mode
         if (state.gameType === 'online' && state.roomCode) {
             setTimeout(() => {
-                if (state.gameType === 'online' && !state.ws) {
+                if (state.gameType === 'online' && !state.ws && !state._wsConnecting) {
                     connectWebSocket();
                 }
-            }, 2000);
+            }, 1000);
         }
     };
 
@@ -1767,6 +1788,22 @@ function connectWebSocket() {
 function wsSend(msg) {
     if (state.ws && state.ws.readyState === WebSocket.OPEN) {
         state.ws.send(JSON.stringify(msg));
+        return true;
+    }
+    // Queue the message to be sent on reconnect
+    if (!state._wsSendQueue) state._wsSendQueue = [];
+    state._wsSendQueue.push(msg);
+    console.warn('[ws] not connected, message queued:', msg.type);
+    return false;
+}
+
+function updateConnectionStatus(connected) {
+    const banner = document.getElementById('connection-status');
+    if (!banner) return;
+    if (connected) {
+        banner.classList.add('hidden');
+    } else if (state.gameType === 'online') {
+        banner.classList.remove('hidden');
     }
 }
 

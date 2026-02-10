@@ -211,60 +211,70 @@ export class BingoRoom implements DurableObject {
       this.state.acceptWebSocket(server, [`role:${role}`, `id:${id}`]);
 
       // Handle join logic synchronously before returning
-      if (this.room) {
-        if (role === "moderator" && id === this.room.moderatorId) {
-          // Send moderator current state
-          this.sendTo(server, {
-            type: "joined",
-            playerId: id,
-            players: this.getPlayerList(),
-            phase: this.room.phase,
-            moderatorName: this.room.moderatorName,
-            moderatorPlaying: this.room.moderatorPlaying,
-          });
-          // If game already in progress, send full state for reconnect
-          if (this.room.phase === "playing") {
-            this.sendGameState(server, id);
-          }
-        } else if (role === "player") {
-          // Check for reconnect: first by id (same tab), then by name (page refresh, only if disconnected)
-          const byId = this.room.players.find(p => p.id === id);
-          const byName = !byId ? this.room.players.find(p => p.name === name && !p.connected) : null;
-          const existing = byId || byName;
-          if (existing) {
-            const oldId = existing.id;
-            existing.connected = true;
-            existing.id = id;
-            // Update board key if id changed (page-refresh reconnect during a game)
-            if (oldId !== id && this.room.boards[oldId]) {
-              this.room.boards[id] = this.room.boards[oldId];
-              delete this.room.boards[oldId];
-            }
-            // Broadcast reconnect
-            this.broadcast({ type: "player_reconnected", playerId: existing.id, playerName: existing.name });
-          } else {
-            // New player
-            this.room.players.push({ id, name, connected: true });
-            // Broadcast player joined to everyone
-            this.broadcast({ type: "player_joined", players: this.getPlayerList() });
-          }
+      if (!this.room) {
+        // Room doesn't exist (expired or invalid code)
+        this.sendTo(server, { type: "error", message: "Room not found" });
+        server.close(4000, "Room not found");
+        return new Response(null, { status: 101, webSocket: client });
+      }
 
-          // Send joined confirmation to this player
-          this.sendTo(server, {
-            type: "joined",
-            playerId: id,
-            players: this.getPlayerList(),
-            phase: this.room.phase,
-            moderatorName: this.room.moderatorName,
-            moderatorPlaying: this.room.moderatorPlaying,
-          });
-
-          // If game already in progress, send full state for reconnect
-          if (this.room.phase === "playing") {
-            this.sendGameState(server, id);
-          }
-          await this.saveRoom();
+      if (role === "moderator" && id === this.room.moderatorId) {
+        console.log(`[room:${this.room.code}] moderator connected`);
+        // Send moderator current state
+        this.sendTo(server, {
+          type: "joined",
+          playerId: id,
+          players: this.getPlayerList(),
+          phase: this.room.phase,
+          moderatorName: this.room.moderatorName,
+          moderatorPlaying: this.room.moderatorPlaying,
+        });
+        // If game already in progress, send full state for reconnect
+        if (this.room.phase === "playing") {
+          this.sendGameState(server, id);
         }
+      } else if (role === "player") {
+        // Check for reconnect: first by id (same tab), then by name (page refresh, only if disconnected)
+        const byId = this.room.players.find(p => p.id === id);
+        const byName = !byId ? this.room.players.find(p => p.name === name && !p.connected) : null;
+        const existing = byId || byName;
+        if (existing) {
+          const oldId = existing.id;
+          existing.connected = true;
+          existing.id = id;
+          // Update board key if id changed (page-refresh reconnect during a game)
+          if (oldId !== id && this.room.boards[oldId]) {
+            this.room.boards[id] = this.room.boards[oldId];
+            delete this.room.boards[oldId];
+          }
+          console.log(`[room:${this.room.code}] player reconnected: ${existing.name}`);
+          // Broadcast reconnect
+          this.broadcast({ type: "player_reconnected", playerId: existing.id, playerName: existing.name });
+        } else {
+          // New player
+          this.room.players.push({ id, name, connected: true });
+          console.log(`[room:${this.room.code}] player joined: ${name} (${this.room.players.length} total)`);
+          // Broadcast player joined to everyone
+          this.broadcast({ type: "player_joined", players: this.getPlayerList() });
+        }
+
+        // Send joined confirmation to this player
+        this.sendTo(server, {
+          type: "joined",
+          playerId: id,
+          players: this.getPlayerList(),
+          phase: this.room.phase,
+          moderatorName: this.room.moderatorName,
+          moderatorPlaying: this.room.moderatorPlaying,
+        });
+
+        // If game already in progress, send full state for reconnect
+        if (this.room.phase === "playing") {
+          this.sendGameState(server, id);
+        }
+        // Fire-and-forget save — don't block the 101 response.
+        // In-memory state is already updated so subsequent messages work.
+        this.saveRoom().catch(e => console.error("saveRoom failed:", e));
       }
 
       return new Response(null, { status: 101, webSocket: client });
@@ -314,11 +324,13 @@ export class BingoRoom implements DurableObject {
     const role = tags.find(t => t.startsWith("role:"))?.slice(5) || "";
 
     if (role === "moderator") {
+      console.log(`[room:${this.room.code}] moderator disconnected`);
       this.broadcast({ type: "moderator_disconnected" });
     } else {
       const player = this.room.players.find(p => p.id === id);
       if (player) {
         player.connected = false;
+        console.log(`[room:${this.room.code}] player disconnected: ${player.name}`);
         await this.saveRoom();
         this.broadcast({ type: "player_disconnected", playerId: id, playerName: player.name });
       }
@@ -349,9 +361,20 @@ export class BingoRoom implements DurableObject {
   // --- Game logic handlers ---
 
   private async handleStart(senderId: string, senderRole: string, moderatorPlaying?: boolean): Promise<void> {
-    if (!this.room) return;
-    if (senderRole !== "moderator" || senderId !== this.room.moderatorId) return;
-    if (this.room.phase !== "lobby" && this.room.phase !== "playing") return;
+    if (!this.room) {
+      this.sendToId(senderId, { type: "error", message: "Room not found" });
+      return;
+    }
+    if (senderRole !== "moderator" || senderId !== this.room.moderatorId) {
+      console.log(`[room:${this.room.code}] start rejected: sender=${senderId} role=${senderRole} expected=${this.room.moderatorId}`);
+      this.sendToId(senderId, { type: "error", message: "Only the moderator can start the game" });
+      return;
+    }
+    if (this.room.phase !== "lobby" && this.room.phase !== "playing") {
+      this.sendToId(senderId, { type: "error", message: "Game cannot be started in current state" });
+      return;
+    }
+    console.log(`[room:${this.room.code}] start requested by moderator, moderatorPlaying=${moderatorPlaying}`);
 
     // Update moderatorPlaying from client if provided
     if (moderatorPlaying !== undefined) {
@@ -391,6 +414,8 @@ export class BingoRoom implements DurableObject {
     }
 
     await this.saveRoom();
+
+    console.log(`[room:${this.room.code}] game started with ${Object.keys(this.room.boards).length} boards`);
 
     // Send game_start to each participant with all boards
     const allBoards = this.room.boards;
