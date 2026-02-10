@@ -651,7 +651,7 @@ const STRINGS = {
         statusModeratorRandomizing: 'ผู้ดำเนินเกมกำลังสุ่ม...',
         statusSelectYourCell: 'เลือกช่องของคุณ!',
         statusWaitingReveal: 'รอเฉลย...',
-        statusCharRevealed: 'เฉลยแล้ว!',
+        statusCharRevealed: 'คำตอบคือ {char}',
         readyBtn: '🙋 พร้อมแล้ว!',
         readyStatus: 'พร้อม',
         playersReady: '{n}/{total} คนพร้อมแล้ว',
@@ -715,7 +715,7 @@ const STRINGS = {
         statusModeratorRandomizing: 'Moderator is picking...',
         statusSelectYourCell: 'Select your cell!',
         statusWaitingReveal: 'Waiting for reveal...',
-        statusCharRevealed: 'Revealed!',
+        statusCharRevealed: 'Answer: {char}',
         readyBtn: "🙋 I'm ready!",
         readyStatus: 'Ready',
         playersReady: '{n}/{total} ready',
@@ -779,7 +779,7 @@ const STRINGS = {
         statusModeratorRandomizing: '司会者が選んでいます...',
         statusSelectYourCell: 'マスを選んでください！',
         statusWaitingReveal: '答え合わせを待っています...',
-        statusCharRevealed: '発表されました！',
+        statusCharRevealed: '答え：{char}',
         readyBtn: '🙋 準備OK！',
         readyStatus: '準備完了',
         playersReady: '{n}/{total}人が準備完了',
@@ -2159,7 +2159,7 @@ function renderOnlineStatusBanner() {
         banner.textContent = t('statusSelectYourCell');
         banner.className = 'status-banner selecting';
     } else if (state.currentChar) {
-        banner.textContent = t('statusCharRevealed');
+        banner.textContent = t('statusCharRevealed').replace('{char}', state.currentChar);
         banner.className = 'status-banner revealed';
     } else {
         banner.textContent = t('statusModeratorRandomizing');
