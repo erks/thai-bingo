@@ -406,17 +406,18 @@
 
         /* ====== READY BUTTON & INDICATORS ====== */
         .ready-button {
-            width: 100%; max-width: 420px; padding: 14px; border: none; border-radius: 14px;
-            background: linear-gradient(135deg, #7c3aed, #a855f7); color: white;
-            font-family: inherit; font-size: 1.1rem; font-weight: 700;
+            width: 100%; max-width: 420px; padding: 10px 24px;
+            border: 2px solid rgba(255,255,255,0.4); border-radius: 12px;
+            background: rgba(255,255,255,0.15); color: white;
+            font-family: inherit; font-size: 0.95rem; font-weight: 600;
             cursor: pointer; transition: all 0.2s; margin-top: 0;
-            box-shadow: 0 4px 14px rgba(124,58,237,0.35);
+            backdrop-filter: blur(4px);
         }
-        .ready-button:hover { background: linear-gradient(135deg, #6d28d9, #9333ea); box-shadow: 0 6px 18px rgba(124,58,237,0.45); }
+        .ready-button:hover { background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.6); }
         .ready-button.active {
-            background: linear-gradient(135deg, #059669, #10b981); color: white;
-            box-shadow: 0 4px 12px rgba(5,150,105,0.35);
+            background: rgba(16,185,129,0.3); border-color: rgba(16,185,129,0.6); color: white;
         }
+        .ready-button.active:hover { background: rgba(16,185,129,0.4); }
         .ready-badge {
             display: inline-block; font-size: 0.7rem; margin-left: 6px;
             background: #7c3aed; color: white; padding: 1px 6px; border-radius: 6px;
@@ -629,7 +630,7 @@ const STRINGS = {
         statusSelectYourCell: 'เลือกช่องของคุณ!',
         statusWaitingReveal: 'รอเฉลย...',
         statusCharRevealed: 'เฉลยแล้ว!',
-        readyBtn: 'พร้อมแล้ว!',
+        readyBtn: '🙋 พร้อมแล้ว!',
         readyStatus: 'พร้อม',
         playersReady: '{n}/{total} คนพร้อมแล้ว',
         playerDisconnected: 'หลุดการเชื่อมต่อ',
@@ -692,7 +693,7 @@ const STRINGS = {
         statusSelectYourCell: 'Select your cell!',
         statusWaitingReveal: 'Waiting for reveal...',
         statusCharRevealed: 'Revealed!',
-        readyBtn: "I'm ready!",
+        readyBtn: "🙋 I'm ready!",
         readyStatus: 'Ready',
         playersReady: '{n}/{total} ready',
         playerDisconnected: 'Disconnected',
@@ -2077,7 +2078,7 @@ function updateReadyButton() {
     if (!btn) return;
     if (state.isReady) {
         btn.classList.add('active');
-        btn.textContent = '\u2714 ' + t('readyBtn');
+        btn.textContent = '✅ ' + t('readyBtn').replace(/^🙋 /, '');
     } else {
         btn.classList.remove('active');
         btn.textContent = t('readyBtn');
