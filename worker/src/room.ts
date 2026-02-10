@@ -224,11 +224,19 @@ export class BingoRoom implements DurableObject {
             this.sendGameState(server, id);
           }
         } else if (role === "player") {
-          // Check for reconnect (same name)
-          const existing = this.room.players.find(p => p.name === name);
+          // Check for reconnect: first by id (same tab), then by name (page refresh, only if disconnected)
+          const byId = this.room.players.find(p => p.id === id);
+          const byName = !byId ? this.room.players.find(p => p.name === name && !p.connected) : null;
+          const existing = byId || byName;
           if (existing) {
+            const oldId = existing.id;
             existing.connected = true;
             existing.id = id;
+            // Update board key if id changed (page-refresh reconnect during a game)
+            if (oldId !== id && this.room.boards[oldId]) {
+              this.room.boards[id] = this.room.boards[oldId];
+              delete this.room.boards[oldId];
+            }
             // Broadcast reconnect
             this.broadcast({ type: "player_reconnected", playerId: existing.id, playerName: existing.name });
           } else {
