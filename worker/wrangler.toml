@@ -9,3 +9,8 @@ bindings = [{ name = "BINGO_ROOM", class_name = "BingoRoom" }]
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["BingoRoom"]
+
+[observability]
+[observability.logs]
+enabled = true
+invocation_logs = true
