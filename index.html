@@ -470,7 +470,7 @@
 <!-- ====== SETUP SCREEN ====== -->
 <div id="setup-screen" class="screen">
     <div class="setup-container">
-        <button class="lang-toggle" onclick="cycleLang()">EN</button>
+        <button class="lang-toggle" onclick="cycleLang()">🇬🇧 EN</button>
         <h1>🎯 <span data-i18n="title">บิงโกภาษาไทย</span></h1>
         <p class="subtitle" data-i18n="subtitle">เรียนรู้ตัวอักษรไทยแสนสนุก!</p>
 
@@ -556,7 +556,7 @@
     <div class="bottom-controls">
         <button class="ctrl-btn" onclick="backToSetup()" data-i18n="settings">⚙️ ตั้งค่า</button>
         <button class="ctrl-btn" onclick="resetGame()" data-i18n="newGame">🔄 เกมใหม่</button>
-        <button class="ctrl-btn lang-toggle" onclick="cycleLang()">EN</button>
+        <button class="ctrl-btn lang-toggle" onclick="cycleLang()">🇬🇧 EN</button>
     </div>
 </div>
 
@@ -796,7 +796,7 @@ const STRINGS = {
 function t(key) { return STRINGS[state.lang][key]; }
 
 const LANGS = ['th', 'en', 'ja'];
-const LANG_LABELS = { th: 'TH', en: 'EN', ja: 'JA' };
+const LANG_LABELS = { th: '🇹🇭 TH', en: '🇬🇧 EN', ja: '🇯🇵 JA' };
 
 function cycleLang() {
     const i = LANGS.indexOf(state.lang);
