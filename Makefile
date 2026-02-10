@@ -1,4 +1,4 @@
-.PHONY: fmt dev client worker install clean
+.PHONY: fmt test dev client worker install clean
 
 .DEFAULT_GOAL := fmt
 
@@ -9,6 +9,11 @@ WORKER_PORT ?= 8787
 fmt: install
 	@echo "Type-checking worker..."
 	@cd worker && npm exec tsc -- --noEmit
+
+# Run worker tests
+test: install
+	@echo "Running worker tests..."
+	@cd worker && npm test
 
 # Start both client and worker; Ctrl+C stops everything
 dev: install

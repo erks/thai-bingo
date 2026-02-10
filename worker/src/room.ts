@@ -3,139 +3,9 @@
 // ============================================================
 
 import { CONFIG } from "./config";
-
-export interface Env {
-  BINGO_ROOM: DurableObjectNamespace;
-}
-
-// ---------- Data (mirrored from client) ----------
-
-const CONSONANTS = [
-  'ก','ข','ค','ฆ','ง','จ','ฉ','ช','ซ','ฌ','ญ','ฎ','ฏ',
-  'ฐ','ฑ','ฒ','ณ','ด','ต','ถ','ท','ธ','น','บ','ป','ผ','ฝ','พ',
-  'ฟ','ภ','ม','ย','ร','ล','ว','ศ','ษ','ส','ห','ฬ','อ','ฮ'
-];
-
-const VOWELS = [
-  '-ะ','-า','-ิ','-ี','-ึ','-ื','-ุ','-ู',
-  'เ-','เ-ะ','แ-','แ-ะ','โ-','โ-ะ',
-  'เ-าะ','-อ','เ-อ','เ-ีย','เ-ือ','-ัว',
-  'ใ-','ไ-','-ำ','เ-า'
-];
-
-// ---------- Types ----------
-
-interface Cell {
-  char: string;
-  marked: boolean;
-  free: boolean;
-}
-
-interface PlayerInfo {
-  id: string;
-  name: string;
-  connected: boolean;
-}
-
-interface PendingSelection {
-  r: number;
-  c: number;
-}
-
-interface RoomState {
-  code: string;
-  moderatorId: string;
-  moderatorName: string;
-  moderatorPlaying: boolean;
-  players: PlayerInfo[];
-  mode: string;
-  hintsOn: boolean;
-  gamePool: string[];
-  boards: Record<string, Cell[][]>;
-  calledChars: string[];
-  currentChar: string | null;
-  pendingChar: string | null;
-  pendingSelections: Record<string, PendingSelection>;
-  pendingReadyIds: string[];
-  phase: "lobby" | "playing";
-  winners: string[];
-  createdAt: number;
-}
-
-type ClientMessage =
-  | { type: "join"; name: string }
-  | { type: "start"; moderatorPlaying?: boolean }
-  | { type: "randomize" }
-  | { type: "replay" }
-  | { type: "reveal" }
-  | { type: "select"; r: number; c: number }
-  | { type: "mark"; r: number; c: number }
-  | { type: "ready" };
-
-// ---------- Utilities ----------
-
-function shuffle<T>(arr: T[]): T[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
-function generateBoard(pool: string[]): Cell[][] {
-  const picked = shuffle(pool).slice(0, 24);
-  const board: Cell[][] = [];
-  let idx = 0;
-  for (let r = 0; r < 5; r++) {
-    const row: Cell[] = [];
-    for (let c = 0; c < 5; c++) {
-      if (r === 2 && c === 2) {
-        row.push({ char: '⭐', marked: true, free: true });
-      } else {
-        row.push({ char: picked[idx++], marked: false, free: false });
-      }
-    }
-    board.push(row);
-  }
-  return board;
-}
-
-function generateCode(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no ambiguous 0/O, 1/I
-  let code = '';
-  for (let i = 0; i < 6; i++) {
-    code += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return code;
-}
-
-function generateId(): string {
-  return Math.random().toString(36).slice(2, 10);
-}
-
-function checkWin(board: Cell[][]): [number, number][] | null {
-  // Rows
-  for (let r = 0; r < 5; r++) {
-    if (board[r].every(cell => cell.marked)) {
-      return board[r].map((_, c) => [r, c] as [number, number]);
-    }
-  }
-  // Columns
-  for (let c = 0; c < 5; c++) {
-    if (board.every(row => row[c].marked)) {
-      return board.map((_, r) => [r, c] as [number, number]);
-    }
-  }
-  // Diagonals
-  if ([0,1,2,3,4].every(i => board[i][i].marked)) {
-    return [0,1,2,3,4].map(i => [i, i] as [number, number]);
-  }
-  if ([0,1,2,3,4].every(i => board[i][4-i].marked)) {
-    return [0,1,2,3,4].map(i => [i, 4-i] as [number, number]);
-  }
-  return null;
-}
+import type { Env, Cell, PlayerInfo, PendingSelection, RoomState, ClientMessage } from "./types";
+import { generateId } from "./utils";
+import { generateBoard, checkWin, buildGamePool } from "./game";
 
 // ---------- Durable Object ----------
 
@@ -388,13 +258,7 @@ export class BingoRoom implements DurableObject {
     }
 
     // Build game pool
-    let fullPool: string[];
-    if (this.room.mode === "consonants") fullPool = [...CONSONANTS];
-    else if (this.room.mode === "vowels") fullPool = [...VOWELS];
-    else fullPool = [...CONSONANTS, ...VOWELS];
-
-    const poolSize = Math.min(CONFIG.gamePoolSizes[this.room.mode] || CONFIG.gamePoolSizeFallback, fullPool.length);
-    this.room.gamePool = shuffle(fullPool).slice(0, poolSize);
+    this.room.gamePool = buildGamePool(this.room.mode);
     this.room.calledChars = [];
     this.room.currentChar = null;
     this.room.pendingChar = null;

@@ -16,3 +16,5 @@ jobs:
         working-directory: worker
       - name: Type-check
         run: make fmt
+      - name: Tests
+        run: make test

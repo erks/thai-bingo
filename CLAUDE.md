@@ -10,6 +10,7 @@ Thai Bingo (บิงโกภาษาไทย) — a web app for learning Tha
 
 - **Quick start:** `make install && make dev` — runs both client and worker locally.
 - **Type-check:** `make` or `make fmt` — runs TypeScript type-checking (default target).
+- **Tests:** `make test` — runs worker unit + integration tests via Vitest.
 - **Client only:** `make client` (or open `index.html` directly). No build step.
 - **Worker only:** `make worker` (or `cd worker && npx wrangler dev`).
 - **Install deps:** `make install` — installs worker npm dependencies.
@@ -20,7 +21,7 @@ Thai Bingo (บิงโกภาษาไทย) — a web app for learning Tha
 
 GitHub Actions workflows automatically run checks and deployments:
 
-- **PR Check (`.github/workflows/pr-check.yml`)** — Runs `make fmt` on all PRs to `main`. Must pass before merge.
+- **PR Check (`.github/workflows/pr-check.yml`)** — Runs `make fmt` and `make test` on all PRs to `main`. Must pass before merge.
 - **Deploy Worker (`.github/workflows/deploy-worker.yml`)** — On push to `main` (when `worker/**` changes):
   1. Runs `make fmt` to type-check
   2. Deploys to Cloudflare Workers if checks pass
@@ -63,12 +64,21 @@ All UI text uses `t(key)` with `STRINGS.th`, `STRINGS.en`, and `STRINGS.ja`. Use
 
 ### Worker — `worker/`
 
-Cloudflare Worker + Durable Object for multiplayer WebSocket API.
+Cloudflare Worker + Durable Object for multiplayer WebSocket API. The codebase is modular: pure types, utilities, and game logic are in separate files for testability. The Durable Object class orchestrates them.
 
+- **`worker/src/types.ts`** — Shared TypeScript interfaces: `Env`, `Cell`, `PlayerInfo`, `PendingSelection`, `RoomState`, `ClientMessage`
 - **`worker/src/config.ts`** — All tunable server parameters (timeouts, pool sizes, room code format, player limits)
+- **`worker/src/utils.ts`** — Pure utility functions: `shuffle()`, `generateCode()`, `generateId()`
+- **`worker/src/game.ts`** — Pure game logic and data: `CONSONANTS`, `VOWELS`, `generateBoard()`, `checkWin()`, `buildGamePool()`
 - **`worker/src/index.ts`** — Stateless Worker entry point. Routes: `POST /api/room` (create), `GET /api/room/:code/websocket` (WS upgrade). CORS allowlist here.
-- **`worker/src/room.ts`** — `BingoRoom` Durable Object using Hibernation API. Manages room state, board generation, turn flow, win detection.
+- **`worker/src/room.ts`** — `BingoRoom` Durable Object using Hibernation API. Orchestrates room state, WebSocket lifecycle, and game handlers. Imports pure logic from `game.ts` and `utils.ts`.
 - **`worker/wrangler.toml`** — DO binding `BINGO_ROOM` → `BingoRoom`
+
+#### Design Principles
+
+- **Pure functions over methods.** Game logic (`checkWin`, `generateBoard`, `buildGamePool`) and utilities (`shuffle`, `generateCode`, `generateId`) are standalone exported functions, not class methods. This makes them trivially unit-testable without mocking DO state.
+- **Single responsibility per file.** Types, config, utilities, game logic, HTTP routing, and DO orchestration each have their own file. New logic should go in the most specific file, not `room.ts`.
+- **Thin orchestrator.** `room.ts` should remain a thin orchestrator that wires together pure functions. When adding features, extract testable logic into `game.ts` or `utils.ts` first, then call it from the handler.
 
 #### Durable Object Notes
 
@@ -95,6 +105,37 @@ Server → Client: `joined`, `player_joined`, `player_disconnected`, `player_rec
 | Moderator (not playing) | N/A            | All equal      | Yes             |
 | Moderator (playing)     | Large, primary | Smaller, below | Yes             |
 | Player                  | Large, primary | Smaller, below | No              |
+
+## Testing
+
+Tests live in `worker/test/` and run via Vitest with `@cloudflare/vitest-pool-workers` (real Workers runtime, not mocks).
+
+- **Run:** `make test` (or `cd worker && npm test`)
+- **Config:** `worker/vitest.config.ts` — uses Workers pool with `isolatedStorage: false` (required for WebSocket tests)
+
+### Test structure
+
+| File | Type | What it covers |
+|------|------|----------------|
+| `worker/test/utils.test.ts` | Unit | `shuffle`, `generateCode`, `generateId` |
+| `worker/test/game.test.ts` | Unit | `generateBoard`, `checkWin`, `buildGamePool`, data arrays |
+| `worker/test/room.test.ts` | Integration | Full DO lifecycle via WebSocket: room creation, joins, game start, turn flow, marks, win detection, disconnect/reconnect, alarm cleanup, ready state, replay |
+
+### Test expectations
+
+Tests must be kept up-to-date with high coverage. When making changes to the worker:
+
+- **New pure logic** (game rules, utilities) → add unit tests in the corresponding test file
+- **New message types or handler changes** → add or update integration tests in `room.test.ts`
+- **Bug fixes** → add a regression test that would have caught the bug
+- **All tests must pass** before merging (`make fmt && make test`)
+
+### Writing good tests
+
+- **Test behavior, not implementation.** Assert on observable outcomes (messages received, state changes) rather than internal method calls.
+- **Prefer pure functions.** If new logic can be a pure function in `game.ts` or `utils.ts`, extract it there and unit test it directly. This is faster and more reliable than testing through WebSocket message flows.
+- **Integration tests use real WebSockets.** `room.test.ts` connects actual WebSocket clients to the DO and exchanges messages. Use the `connectWs()` helper and `ofType()` to filter messages.
+- **Avoid testing through storage manipulation.** `runInDurableObject` can read storage for assertions but should not be used to set up game state — the in-memory `this.room` won't reflect storage changes. Drive state through the normal message protocol instead.
 
 ## Hosting
 

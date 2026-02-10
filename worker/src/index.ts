@@ -4,12 +4,10 @@
 
 import { BingoRoom } from "./room";
 import { CONFIG } from "./config";
+import type { Env } from "./types";
+import { generateCode } from "./utils";
 
 export { BingoRoom };
-
-export interface Env {
-  BINGO_ROOM: DurableObjectNamespace;
-}
 
 // CORS origins allowed to connect
 const ALLOWED_ORIGINS = [
@@ -29,15 +27,6 @@ function corsHeaders(request: Request): Record<string, string> {
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
   };
-}
-
-function generateCode(): string {
-  const chars = CONFIG.roomCodeChars;
-  let code = "";
-  for (let i = 0; i < CONFIG.roomCodeLength; i++) {
-    code += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return code;
 }
 
 export default {
