@@ -539,12 +539,14 @@ const CONSONANTS = [
 const VOWELS = [
     '-ะ', '-า', '-ิ', '-ี', '-ึ', '-ื', '-ุ', '-ู',
     'เ-', 'เ-ะ', 'แ-', 'แ-ะ', 'โ-', 'โ-ะ',
-    'เ-าะ', '-อ', 'เ-อ', 'เ-ีย', 'เ-ือ', '-ัว',
-    'ใ-', 'ไ-', '-ำ', 'เ-า'
+    'เ-าะ', '-อ', 'เ-อะ', 'เ-อ',
+    'เ-ียะ', 'เ-ีย', 'เ-ือะ', 'เ-ือ', '-ัวะ', '-ัว',
+    'ใ-', 'ไ-', '-ำ', 'เ-า',
+    '-รร', 'ฤ', 'ฤๅ'
 ];
 
 const PLAYER_COLORS = ['#4361ee', '#e84393', '#00b894', '#f39c12'];
-const GAME_POOL_SIZES = { consonants: 35, vowels: 24, mixed: 42 };
+const GAME_POOL_SIZES = { consonants: 35, vowels: 31, mixed: 42 };
 
 // ============================================================
 // I18N
@@ -814,16 +816,19 @@ const CHAR_AUDIO_KEY = {
     'อ': 'consonant-o-ang', 'ฮ': 'consonant-ho-nokhu',
     '-ะ': 'sara-a-short', '-า': 'sara-a-long',
     '-ิ': 'sara-i-short', '-ี': 'sara-i-long',
-    '-ึ': 'sara-uh-short', '-ื': 'sara-uh-long',
+    '-ึ': 'sara-eu-short', '-ื': 'sara-eu-long',
     '-ุ': 'sara-u-short', '-ู': 'sara-u-long',
     'เ-': 'sara-e-long', 'เ-ะ': 'sara-e-short',
     'แ-': 'sara-ae-long', 'แ-ะ': 'sara-ae-short',
     'โ-': 'sara-o-long', 'โ-ะ': 'sara-o-short',
     'เ-าะ': 'sara-aw-short', '-อ': 'sara-aw-long',
-    'เ-อ': 'sara-eu-long', 'เ-ีย': 'sara-ia-long',
-    'เ-ือ': 'sara-eua-long', '-ัว': 'sara-ua-long',
+    'เ-อะ': 'sara-uh-short', 'เ-อ': 'sara-uh-long',
+    'เ-ียะ': 'sara-ia-short', 'เ-ีย': 'sara-ia-long',
+    'เ-ือะ': 'sara-eua-short', 'เ-ือ': 'sara-eua-long',
+    '-ัวะ': 'sara-ua-short', '-ัว': 'sara-ua-long',
     'ใ-': 'sara-ay-may-muan', 'ไ-': 'sara-ay-may-malay',
     '-ำ': 'sara-am', 'เ-า': 'sara-au',
+    '-รร': 'sara-an-rohan', 'ฤ': 'sara-reu-short', 'ฤๅ': 'sara-reu-long',
 };
 
 let charVoiceover = null;
