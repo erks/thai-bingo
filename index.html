@@ -404,6 +404,28 @@
             display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; width: 100%;
         }
 
+        /* ====== READY BUTTON & INDICATORS ====== */
+        .ready-button {
+            width: 100%; max-width: 420px; padding: 12px; border: 2px solid #7c3aed; border-radius: 14px;
+            background: white; color: #7c3aed; font-family: inherit; font-size: 1.05rem; font-weight: 700;
+            cursor: pointer; transition: all 0.2s; margin-top: 0;
+        }
+        .ready-button:hover { background: #f5f3ff; }
+        .ready-button.active {
+            background: linear-gradient(135deg, #7c3aed, #a855f7); color: white;
+            border-color: #7c3aed; box-shadow: 0 4px 12px rgba(124,58,237,0.3);
+        }
+        .ready-badge {
+            display: inline-block; font-size: 0.7rem; margin-left: 6px;
+            background: #7c3aed; color: white; padding: 1px 6px; border-radius: 6px;
+            vertical-align: middle; font-weight: 700;
+        }
+        .board-card.player-ready { box-shadow: 0 0 0 2px #7c3aed, 0 6px 24px rgba(124,58,237,0.2); }
+        .ready-info {
+            font-size: 0.85rem; font-weight: 700; color: #7c3aed;
+            text-align: center; padding: 4px 0;
+        }
+
         /* ====== RESPONSIVE ====== */
         @media (max-width: 900px) {
             .players-3 .board-card { width: calc(50% - 8px); }
@@ -605,6 +627,9 @@ const STRINGS = {
         statusSelectYourCell: 'เลือกช่องของคุณ!',
         statusWaitingReveal: 'รอเฉลย...',
         statusCharRevealed: 'เฉลยแล้ว!',
+        readyBtn: 'พร้อมแล้ว!',
+        readyStatus: 'พร้อม',
+        playersReady: '{n}/{total} คนพร้อมแล้ว',
         playerDisconnected: 'หลุดการเชื่อมต่อ',
         moderatorDisconnected: 'ผู้ดำเนินเกมหลุดการเชื่อมต่อ',
         reconnecting: 'กำลังเชื่อมต่อใหม่...',
@@ -665,6 +690,9 @@ const STRINGS = {
         statusSelectYourCell: 'Select your cell!',
         statusWaitingReveal: 'Waiting for reveal...',
         statusCharRevealed: 'Revealed!',
+        readyBtn: "I'm ready!",
+        readyStatus: 'Ready',
+        playersReady: '{n}/{total} ready',
         playerDisconnected: 'Disconnected',
         moderatorDisconnected: 'Moderator disconnected',
         reconnecting: 'Reconnecting...',
@@ -741,6 +769,8 @@ let state = {
     allBoards: {},             // {playerId: board}
     myBoardId: null,
     onlinePhase: null,         // 'lobby' | 'playing'
+    pendingReadyIds: [],
+    isReady: false,
 };
 
 // ============================================================
@@ -1296,6 +1326,7 @@ function renderBoards() {
 
         const card = document.createElement('div');
         card.className = 'board-card p' + (pi % 4);
+        if (isOnline && state._boardIdMap) card.dataset.playerId = state._boardIdMap[pi] || '';
         if (isPrimary) card.classList.add('primary');
         if (isSecondary) card.classList.add('secondary');
 
@@ -1726,6 +1757,14 @@ function handleServerMessage(msg) {
             onlineWin(msg);
             break;
 
+        case 'ready_update':
+            state.pendingReadyIds = msg.readyPlayerIds || [];
+            state.isReady = state.pendingReadyIds.includes(state.playerId);
+            updateReadyButton();
+            updateReadyIndicators();
+            if (state.role === 'moderator') updateModeratorReadyInfo();
+            break;
+
         case 'error':
             alert(msg.message);
             break;
@@ -1899,8 +1938,10 @@ function onlineGameStart(msg) {
     state.currentChar = msg.currentChar || null;
     state.winners = msg.winners || [];
     state.gameActive = true;
-    state.pendingChar = null;
+    state.pendingChar = msg.pendingChar || null;
     state.pendingSelections = {};
+    state.pendingReadyIds = msg.pendingReadyIds || [];
+    state.isReady = state.pendingReadyIds.includes(state.playerId);
 
     // Build boards array + players array for rendering
     const playerIds = Object.keys(state.allBoards);
@@ -1965,6 +2006,20 @@ function onlineGameStart(msg) {
     document.getElementById('replay-btn').classList.add('hidden');
     document.getElementById('reveal-btn').classList.add('hidden');
     setVoiceStatus(t('statusReady'), '', 'statusReady');
+
+    // Restore ready UI on reconnect during pending phase
+    if (state.pendingChar) {
+        renderReadyButton();
+        updateReadyButton();
+        updateReadyIndicators();
+        if (state.role === 'moderator') {
+            document.getElementById('random-btn').disabled = true;
+            document.getElementById('replay-btn').classList.remove('hidden');
+            document.getElementById('reveal-btn').classList.remove('hidden');
+            setVoiceStatus(t('statusPending'), '', 'statusPending');
+            updateModeratorReadyInfo();
+        }
+    }
 }
 
 function renderOnlineStatusBanner() {
@@ -1991,10 +2046,102 @@ function renderOnlineStatusBanner() {
     }
 }
 
+function renderReadyButton() {
+    if (state.gameType !== 'online') return;
+    const isParticipant = state.role === 'player' || (state.role === 'moderator' && state.moderatorPlaying);
+    if (!isParticipant) return;
+
+    removeReadyButton();
+    const btn = document.createElement('button');
+    btn.className = 'ready-button';
+    btn.id = 'ready-btn';
+    btn.textContent = t('readyBtn');
+    btn.onclick = () => {
+        wsSend({ type: 'ready' });
+    };
+
+    const gameScreen = document.getElementById('game-screen');
+    const boardsContainer = document.getElementById('boards-container');
+    gameScreen.insertBefore(btn, boardsContainer);
+}
+
+function removeReadyButton() {
+    const btn = document.getElementById('ready-btn');
+    if (btn) btn.remove();
+}
+
+function updateReadyButton() {
+    const btn = document.getElementById('ready-btn');
+    if (!btn) return;
+    if (state.isReady) {
+        btn.classList.add('active');
+        btn.textContent = '\u2714 ' + t('readyBtn');
+    } else {
+        btn.classList.remove('active');
+        btn.textContent = t('readyBtn');
+    }
+}
+
+function updateReadyIndicators() {
+    if (state.gameType !== 'online') return;
+    const readySet = new Set(state.pendingReadyIds);
+    const allCards = document.querySelectorAll('.board-card[data-player-id]');
+
+    for (const card of allCards) {
+        const pid = card.dataset.playerId;
+        const header = card.querySelector('.board-header');
+        if (readySet.has(pid)) {
+            card.classList.add('player-ready');
+            if (header && !header.querySelector('.ready-badge')) {
+                const badge = document.createElement('span');
+                badge.className = 'ready-badge';
+                badge.textContent = t('readyStatus');
+                header.appendChild(badge);
+            }
+        } else {
+            card.classList.remove('player-ready');
+            if (header) {
+                const badge = header.querySelector('.ready-badge');
+                if (badge) badge.remove();
+            }
+        }
+    }
+}
+
+function updateModeratorReadyInfo() {
+    if (state.role !== 'moderator') return;
+    let info = document.getElementById('moderator-ready-info');
+    if (!info) {
+        info = document.createElement('div');
+        info.className = 'ready-info';
+        info.id = 'moderator-ready-info';
+        const voicePanel = document.querySelector('.voice-panel');
+        if (voicePanel) voicePanel.appendChild(info);
+    }
+    // onlinePlayers includes moderator only when playing, so length = total participants
+    const totalParticipants = state.onlinePlayers.length;
+    const n = state.pendingReadyIds.length;
+    info.textContent = t('playersReady').replace('{n}', n).replace('{total}', totalParticipants);
+}
+
+function clearModeratorReadyInfo() {
+    const info = document.getElementById('moderator-ready-info');
+    if (info) info.remove();
+}
+
+function clearReadyState() {
+    state.pendingReadyIds = [];
+    state.isReady = false;
+    removeReadyButton();
+    updateReadyIndicators();
+    clearModeratorReadyInfo();
+}
+
 function onlineRandomized(pendingChar) {
     // Moderator receives the actual char
     state.pendingChar = pendingChar;
     state.pendingSelections = {};
+    clearReadyState();
 
     const charEl = document.getElementById('current-char');
     const display = document.getElementById('caller-display');
@@ -2007,12 +2154,18 @@ function onlineRandomized(pendingChar) {
     document.getElementById('replay-btn').classList.remove('hidden');
     document.getElementById('reveal-btn').classList.remove('hidden');
     setVoiceStatus(t('statusPending'), '', 'statusPending');
+
+    // Render ready button for playing moderator, plus ready info
+    if (state.moderatorPlaying) renderReadyButton();
+    updateModeratorReadyInfo();
 }
 
 function onlineCharPending(char) {
     // Players know a char is pending and receive it to announce
     state.pendingChar = char || '__hidden__';  // truthy but may be unknown
     state.pendingSelections = {};
+    state.pendingReadyIds = [];
+    state.isReady = false;
 
     // Play audio announcement for players
     if (char && state.role === 'player') {
@@ -2021,6 +2174,7 @@ function onlineCharPending(char) {
     }
 
     renderOnlineStatusBanner();
+    renderReadyButton();
 }
 
 function onlineRevealed(msg) {
@@ -2075,6 +2229,7 @@ function onlineRevealed(msg) {
         setVoiceStatus(remaining.length > 0 ? t('statusNext') : t('statusEmpty'), remaining.length > 0 ? 'success' : '', remaining.length > 0 ? 'statusNext' : 'statusEmpty');
     }
 
+    clearReadyState();
     updateHints();
     renderOnlineStatusBanner();
 }

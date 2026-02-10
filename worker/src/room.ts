@@ -56,6 +56,7 @@ interface RoomState {
   currentChar: string | null;
   pendingChar: string | null;
   pendingSelections: Record<string, PendingSelection>;
+  pendingReadyIds: string[];
   phase: "lobby" | "playing";
   winners: string[];
   createdAt: number;
@@ -68,7 +69,8 @@ type ClientMessage =
   | { type: "replay" }
   | { type: "reveal" }
   | { type: "select"; r: number; c: number }
-  | { type: "mark"; r: number; c: number };
+  | { type: "mark"; r: number; c: number }
+  | { type: "ready" };
 
 // ---------- Utilities ----------
 
@@ -186,6 +188,7 @@ export class BingoRoom implements DurableObject {
         currentChar: null,
         pendingChar: null,
         pendingSelections: {},
+        pendingReadyIds: [],
         phase: "lobby",
         winners: [],
         createdAt: Date.now(),
@@ -298,6 +301,9 @@ export class BingoRoom implements DurableObject {
       case "mark":
         await this.handleMark(senderId, senderRole, data.r, data.c);
         break;
+      case "ready":
+        await this.handleReady(senderId, senderRole);
+        break;
     }
   }
 
@@ -370,6 +376,7 @@ export class BingoRoom implements DurableObject {
     this.room.currentChar = null;
     this.room.pendingChar = null;
     this.room.pendingSelections = {};
+    this.room.pendingReadyIds = [];
     this.room.winners = [];
     this.room.phase = "playing";
 
@@ -427,6 +434,7 @@ export class BingoRoom implements DurableObject {
     const char = remaining[Math.floor(Math.random() * remaining.length)];
     this.room.pendingChar = char;
     this.room.pendingSelections = {};
+    this.room.pendingReadyIds = [];
 
     await this.saveRoom();
 
@@ -487,6 +495,7 @@ export class BingoRoom implements DurableObject {
       selectionResults[playerId] = { r: sel.r, c: sel.c, valid };
     }
     this.room.pendingSelections = {};
+    this.room.pendingReadyIds = [];
 
     await this.saveRoom();
 
@@ -530,6 +539,25 @@ export class BingoRoom implements DurableObject {
       this.room.pendingSelections[senderId] = { r, c };
     }
     await this.saveRoom();
+  }
+
+  private async handleReady(senderId: string, senderRole: string): Promise<void> {
+    if (!this.room) return;
+    if (!this.room.pendingChar) return;
+
+    const isPlayingModerator = senderRole === "moderator" && this.room.moderatorPlaying && senderId === this.room.moderatorId;
+    const isPlayer = senderRole === "player";
+    if (!isPlayingModerator && !isPlayer) return;
+
+    const idx = this.room.pendingReadyIds.indexOf(senderId);
+    if (idx >= 0) {
+      this.room.pendingReadyIds.splice(idx, 1);
+    } else {
+      this.room.pendingReadyIds.push(senderId);
+    }
+
+    await this.saveRoom();
+    this.broadcast({ type: "ready_update", readyPlayerIds: this.room.pendingReadyIds });
   }
 
   private async handleMark(senderId: string, senderRole: string, r: number, c: number): Promise<void> {
@@ -615,7 +643,9 @@ export class BingoRoom implements DurableObject {
       hintsOn: this.room.hintsOn,
       calledChars: this.room.calledChars,
       currentChar: this.room.currentChar,
+      pendingChar: this.room.pendingChar,
       winners: this.room.winners,
+      pendingReadyIds: this.room.pendingReadyIds,
     });
   }
 }
