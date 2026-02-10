@@ -564,7 +564,7 @@
 // DATA
 // ============================================================
 const CONSONANTS = [
-    'ก','ข','ฃ','ค','ฅ','ฆ','ง','จ','ฉ','ช','ซ','ฌ','ญ','ฎ','ฏ',
+    'ก','ข','ค','ฆ','ง','จ','ฉ','ช','ซ','ฌ','ญ','ฎ','ฏ',
     'ฐ','ฑ','ฒ','ณ','ด','ต','ถ','ท','ธ','น','บ','ป','ผ','ฝ','พ',
     'ฟ','ภ','ม','ย','ร','ล','ว','ศ','ษ','ส','ห','ฬ','อ','ฮ'
 ];
@@ -946,35 +946,17 @@ const CHAR_AUDIO_KEY = {
 
 let charVoiceover = null;
 
-const CHAR_TTS = {
-    'ฃ': 'ขอ ฃวด',
-    'ฅ': 'คอ คน',
-};
-
 function speakChar(char) {
     if (charVoiceover) {
         charVoiceover.pause();
         charVoiceover.currentTime = 0;
     }
-    window.speechSynthesis.cancel();
     const key = CHAR_AUDIO_KEY[char];
     if (key && typeof AUDIO_DATA !== 'undefined' && AUDIO_DATA.has(key)) {
         charVoiceover = new Audio('data:audio/mpeg;base64,' + AUDIO_DATA.get(key));
         charVoiceover.play().catch(err => {
-            console.log('Audio playback blocked, falling back to speech synthesis:', err);
-            // Fallback to speech synthesis
-            if (CHAR_TTS[char]) {
-                const utt = new SpeechSynthesisUtterance(CHAR_TTS[char]);
-                utt.lang = 'th-TH';
-                utt.rate = 0.85;
-                window.speechSynthesis.speak(utt);
-            }
+            console.log('Audio playback blocked:', err);
         });
-    } else if (CHAR_TTS[char]) {
-        const utt = new SpeechSynthesisUtterance(CHAR_TTS[char]);
-        utt.lang = 'th-TH';
-        utt.rate = 0.85;
-        window.speechSynthesis.speak(utt);
     }
 }
 
