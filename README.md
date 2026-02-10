@@ -8,17 +8,14 @@ A web-based bingo game for learning Thai alphabet characters — consonants, vow
 
 ### Local Mode
 
-1. **Open `index.html`** in a browser (or serve via `python3 -m http.server` for voice input support)
+1. **Open the app** at https://erks.github.io/thai-bingo/ (or run `make dev` locally)
 2. **Set up** — choose player count (2–4), enter names, and select a mode:
-   - **พยัญชนะ** — consonants only (44 characters)
-   - **สระ** — vowels only (24 characters)
+   - **พยัญชนะ** — consonants only (42 characters)
+   - **สระ** — vowels only (31 characters)
    - **ผสม** — mixed (consonants + vowels)
-3. **Call characters** using one of two input methods:
-   - **Voice** (🎤) — speak the character's traditional name (e.g. "กอไก่" for ก, "สระอา" for -า). Requires localhost or HTTPS for Web Speech API access.
-   - **Manual** (📋) — click characters from a picker grid
-4. **Players guess** — after a character is called, boards are revealed and each player selects the cell they think matches
-5. **Reveal** — click "เฉลย" to show the called character. Correct guesses are marked; wrong guesses are rejected.
-6. **Bingo!** — first player to complete a row, column, or diagonal wins
+3. **Call characters** — click the randomize button to pick a character, then reveal it
+4. **Players mark** — after a character is revealed, players select the matching cell on their board
+5. **Bingo!** — first player to complete a row, column, or diagonal wins
 
 ### Online Mode
 
@@ -29,36 +26,32 @@ A web-based bingo game for learning Thai alphabet characters — consonants, vow
 5. Players select cells on their own board before each reveal — correct guesses are marked automatically
 6. Everyone sees all boards update in real time
 
-## Voice Input
-
-Voice recognition uses the Web Speech API with Thai (`th-TH`) locale. Characters are matched by their traditional names:
-
-| Type | Example | Say |
-|------|---------|-----|
-| Consonant | ก | กอไก่ |
-| Consonant | ช | ชอช้าง |
-| Vowel | -า | สระอา |
-| Vowel | ใ- | สระใอไม้ม้วน |
-
-Speech debug output is logged to the browser console (`F12` → Console).
-
-**Note:** Voice input requires a secure context. Open via `localhost` (e.g. `python3 -m http.server 8000`) rather than `file://`. If speech is unavailable, the game falls back to manual picker mode.
-
 ## Development
 
 ```sh
-make           # type-check TypeScript (runs automatically on PRs)
-make install   # install worker dependencies
-make dev       # run client (port 3000) + worker (port 8787)
-make client    # run client only
+make install   # install all workspace dependencies
+make dev       # run client (Vite, port 3000) + worker (port 8787)
+make           # type-check all packages (shared, worker, client)
+make test      # run worker + client tests
+make build     # production build of the client
+make client    # run client dev server only
 make worker    # run worker only
 make clean     # kill dangling dev processes
 ```
 
-**CI/CD:** TypeScript type-checking runs automatically on PRs and before deployment. Worker is auto-deployed to Cloudflare on push to `main`.
+### Project Structure
+
+- **`shared/`** — shared types, game data, and logic (npm workspace: `@thai-bingo/shared`)
+- **`client/`** — Vite + TypeScript frontend (npm workspace: `@thai-bingo/client`)
+- **`worker/`** — Cloudflare Worker + Durable Object for multiplayer API (npm workspace: `@thai-bingo/worker`)
+
+### CI/CD
+
+- **PR checks:** type-checking, tests, and build run automatically on all PRs
+- **Deploy:** worker auto-deploys to Cloudflare, client auto-deploys to GitHub Pages on push to `main`
 
 ## Requirements
 
-- A modern browser (Chrome/Edge recommended for Web Speech API)
-- No build step, dependencies, or server required for local mode
+- A modern browser (Chrome/Edge recommended for audio features)
+- Node.js 22+ for development
 - Online mode requires the Cloudflare Worker backend (auto-deployed via GitHub Actions)

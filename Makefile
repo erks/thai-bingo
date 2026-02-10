@@ -1,40 +1,50 @@
-.PHONY: fmt test dev client worker install clean
+.PHONY: fmt test dev client worker build install clean
 
 .DEFAULT_GOAL := fmt
 
 CLIENT_PORT ?= 3000
 WORKER_PORT ?= 8787
 
-# Lint and type-check the codebase
+# Type-check all packages
 fmt: install
+	@echo "Type-checking shared..."
+	@npx tsc --noEmit -p shared/tsconfig.json
 	@echo "Type-checking worker..."
 	@cd worker && npm exec tsc -- --noEmit
+	@echo "Type-checking client..."
+	@npx tsc --noEmit -p client/tsconfig.json
 
-# Run worker tests
+# Run all tests
 test: install
 	@echo "Running worker tests..."
 	@cd worker && npm test
+	@echo "Running client tests..."
+	@cd client && npx vitest run
 
-# Start both client and worker; Ctrl+C stops everything
+# Start both client (Vite) and worker; Ctrl+C stops everything
 dev: install
 	@echo "Starting client on http://localhost:$(CLIENT_PORT) and worker on http://localhost:$(WORKER_PORT)..."
 	@pids=""; \
 	trap 'kill $$pids 2>/dev/null; sleep 0.3; kill -9 $$pids 2>/dev/null; exit 0' INT TERM; \
-	python3 -m http.server $(CLIENT_PORT) -b 127.0.0.1 & pids="$$!"; \
+	(cd client && npx vite --port $(CLIENT_PORT)) & pids="$$!"; \
 	(cd worker && npx wrangler dev --port $(WORKER_PORT)) & pids="$$pids $$!"; \
 	wait
 
-# Start only the static file server for the client
-client:
-	python3 -m http.server $(CLIENT_PORT) -b 127.0.0.1
+# Start only the Vite dev server for the client
+client: install
+	cd client && npx vite --port $(CLIENT_PORT)
 
 # Start only the Cloudflare Worker locally
 worker: install
 	cd worker && npx wrangler dev --port $(WORKER_PORT)
 
-# Install worker dependencies
+# Production build of the client
+build: install
+	cd client && npx vite build
+
+# Install all workspace dependencies
 install:
-	cd worker && npm install
+	npm install
 
 # Kill any dangling dev processes on CLIENT_PORT and WORKER_PORT
 clean:

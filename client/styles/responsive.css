@@ -1,0 +1,50 @@
+/* ====== READY BUTTON & INDICATORS ====== */
+.ready-button {
+    width: 100%; max-width: 420px; padding: 10px 24px;
+    border: 2px solid rgba(255,255,255,0.4); border-radius: 12px;
+    background: rgba(255,255,255,0.15); color: white;
+    font-family: inherit; font-size: 0.95rem; font-weight: 600;
+    cursor: pointer; transition: all 0.2s; margin-top: 0;
+    backdrop-filter: blur(4px);
+}
+.ready-button:hover { background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.6); }
+.ready-button.active {
+    background: rgba(16,185,129,0.3); border-color: rgba(16,185,129,0.6); color: white;
+}
+.ready-button.active:hover { background: rgba(16,185,129,0.4); }
+.ready-badge {
+    display: inline-block; font-size: 0.7rem; margin-left: 6px;
+    background: #7c3aed; color: white; padding: 1px 6px; border-radius: 6px;
+    vertical-align: middle; font-weight: 700;
+}
+.board-card.player-ready { box-shadow: 0 0 0 2px #7c3aed, 0 6px 24px rgba(124,58,237,0.2); }
+@keyframes readyPulse {
+    0%, 100% { box-shadow: 0 0 4px rgba(124,58,237,0.3); }
+    50% { box-shadow: 0 0 14px rgba(124,58,237,0.7); }
+}
+.ready-info {
+    font-size: 0.85rem; font-weight: 700; color: #7c3aed;
+    text-align: center; padding: 4px 0;
+    border-radius: 8px; transition: all 0.3s ease;
+}
+.ready-info.all-ready {
+    font-size: 1.05rem; color: #fff; background: #7c3aed;
+    padding: 6px 12px; animation: readyPulse 1.2s ease-in-out infinite;
+}
+
+/* ====== RESPONSIVE ====== */
+@media (max-width: 900px) {
+    .players-3 .board-card { width: calc(50% - 8px); }
+    .cell { font-size: 1rem; }
+}
+@media (max-width: 600px) {
+    .setup-container { padding: 24px; }
+    .setup-container h1 { font-size: 1.6rem; }
+    .board-card { min-width: 220px; }
+    .players-2 .board-card, .players-3 .board-card, .players-4 .board-card { width: 100%; max-width: 360px; }
+    .cell { font-size: 1.1rem; border-radius: 6px; }
+    .boards-container.online-player .board-card.primary .cell { font-size: 1.4rem; }
+    .caller-current { width: 72px; height: 72px; }
+    .caller-current span { font-size: 1.6rem; }
+    .randomize-button { width: 60px; height: 60px; font-size: 1.6rem; }
+}

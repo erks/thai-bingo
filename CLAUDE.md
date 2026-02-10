@@ -8,12 +8,13 @@ Thai Bingo (บิงโกภาษาไทย) — a web app for learning Tha
 
 ## Development
 
-- **Quick start:** `make install && make dev` — runs both client and worker locally.
-- **Type-check:** `make` or `make fmt` — runs TypeScript type-checking (default target).
-- **Tests:** `make test` — runs worker unit + integration tests via Vitest.
-- **Client only:** `make client` (or open `index.html` directly). No build step.
+- **Quick start:** `make install && make dev` — runs both client (Vite) and worker locally.
+- **Type-check:** `make` or `make fmt` — type-checks all packages (shared, worker, client).
+- **Tests:** `make test` — runs worker + client tests via Vitest.
+- **Client only:** `make client` — starts Vite dev server.
 - **Worker only:** `make worker` (or `cd worker && npx wrangler dev`).
-- **Install deps:** `make install` — installs worker npm dependencies.
+- **Build:** `make build` — production build of the client (outputs to `client/dist/`).
+- **Install deps:** `make install` — installs all workspace dependencies.
 - **Deploy worker:** `cd worker && npx wrangler deploy` (or push to main for auto-deploy via CI/CD).
 - **Clean up:** `make clean` — kills any dangling dev processes on ports 3000/8787.
 
@@ -21,27 +22,76 @@ Thai Bingo (บิงโกภาษาไทย) — a web app for learning Tha
 
 GitHub Actions workflows automatically run checks and deployments:
 
-- **PR Check (`.github/workflows/pr-check.yml`)** — Runs `make fmt` and `make test` on all PRs to `main`. Must pass before merge.
-- **Deploy Worker (`.github/workflows/deploy-worker.yml`)** — On push to `main` (when `worker/**` changes):
+- **PR Check (`.github/workflows/pr-check.yml`)** — Runs `make fmt`, `make test`, and `make build` on all PRs to `main`. Must pass before merge.
+- **Deploy Worker (`.github/workflows/deploy-worker.yml`)** — On push to `main` (when `worker/**` or `shared/**` changes):
   1. Runs `make fmt` to type-check
   2. Deploys to Cloudflare Workers if checks pass
   3. Requires `CLOUDFLARE_API_TOKEN` secret configured in repo settings
+- **Deploy Client (`.github/workflows/deploy-client.yml`)** — On push to `main` (when `client/**` or `shared/**` changes):
+  1. Builds client via `make build`
+  2. Deploys to GitHub Pages via Actions
+  3. Requires GitHub Pages source set to "GitHub Actions" in repo settings
 
 ## Architecture
 
-### Client — `index.html`
+### Monorepo Structure
 
-Single-file HTML + CSS + vanilla JS (no build step, no dependencies beyond Google Fonts and `audio.js`).
+npm workspaces with three packages:
 
-- **`<style>`** — CSS including player color theming (`--p1`–`--p4`), responsive breakpoints, animations, and online-mode layouts (lobby, primary/secondary boards)
-- **HTML** — Screens toggled via `.hidden` class: setup, lobby (online), game, win overlay
-- **`<script>`** — All game logic; `state.gameType` (`'local'` | `'online'`) controls branching
+- **`shared/`** — `@thai-bingo/shared`: shared types, game data, and logic used by both client and worker
+- **`client/`** — `@thai-bingo/client`: Vite-based TypeScript frontend
+- **`worker/`** — `@thai-bingo/worker`: Cloudflare Worker + Durable Object for multiplayer API
 
-#### Key Data Structures
+### Shared — `shared/`
 
-- `CONSONANTS` (44), `VOWELS` (24) — character pools
-- `CONSONANT_SPEECH` / `VOWEL_SPEECH` — spoken-form keyword maps for Web Speech API
-- `state` object — global state for both local and online modes
+Canonical game data and pure logic shared between client and worker:
+
+- **`shared/src/types.ts`** — `Cell`, `PlayerInfo`, `PendingSelection` interfaces
+- **`shared/src/game-data.ts`** — `CONSONANTS` (42), `VOWELS` (31) — canonical character arrays
+- **`shared/src/utils.ts`** — `shuffle()` — Fisher-Yates shuffle
+- **`shared/src/game-logic.ts`** — `BOARD_SIZE`, `EXTRA_POOL_CHARS`, `buildGamePool()`, `generateBoard()`, `checkWin()`
+- **`shared/src/index.ts`** — Re-exports all symbols
+
+### Client — `client/`
+
+Vite-based TypeScript frontend with modular architecture:
+
+```
+client/src/
+  main.ts          # Entry: imports styles, wires event listeners, calls applyLang()
+  state.ts         # GameState interface + singleton + resetGameState()
+  config.ts        # API_BASE, PLAYER_COLORS
+  i18n/
+    strings.ts     # STRINGS.th/.en/.ja, LANGS, LANG_LABELS, StringKey type
+    i18n.ts        # t(), cycleLang(), setLang(), applyLang()
+  audio/
+    audio.ts       # ensureAudio(), playTone(), sfx*() functions
+    speech.ts      # CHAR_AUDIO_KEY, speakChar(), stopCharVoiceover()
+    audio-data.ts  # AUDIO_DATA Map (745KB, lazy-loaded via dynamic import)
+  game/
+    caller.ts      # randomizeChar(), revealChar(), callCharacter()
+    marking.ts     # markCell(), confirmMark()
+    win.ts         # showWin(), resetGame(), continueAfterWin()
+    confetti.ts    # startConfetti(), stopConfetti()
+  ui/
+    dom.ts         # $(), show(), hide(), highlightWinLine()
+    setup.ts       # initSetup(), renderOnlineSetup(), startGame()
+    boards.ts      # renderGame(), renderBoards(), renderCalledHistory()
+    lobby.ts       # showLobby(), renderLobbyPlayers(), copyShareLink()
+    online-ui.ts   # renderOnlineStatusBanner(), ready button/indicator functions
+  ws/
+    connection.ts  # connectWebSocket(), wsSend()
+    handlers.ts    # handleServerMessage() + per-type handlers
+    room-api.ts    # createRoom(), joinRoom()
+client/styles/
+  base.css         # Reset, variables, body, fonts
+  setup.css        # Setup screen
+  game.css         # Caller, boards, cells, animations
+  lobby.css        # Online lobby
+  win.css          # Win overlay, confetti
+  responsive.css   # Media queries
+client/index.html  # Minimal HTML shell (body markup, no inline scripts)
+```
 
 #### i18n
 
@@ -49,7 +99,7 @@ All UI text uses `t(key)` with `STRINGS.th`, `STRINGS.en`, and `STRINGS.ja`. Use
 
 **Adding a new language:**
 
-1. Add a new `STRINGS.<code>` object in `index.html` with all keys (copy an existing language block as template)
+1. Add a new `STRINGS.<code>` object in `client/src/i18n/strings.ts` with all keys (copy an existing language block as template)
 2. Append the language code to the `LANGS` array (e.g. `['th', 'en', 'ja', 'ko']`)
 3. Add an entry to `LANG_LABELS` (e.g. `ko: 'KO'`)
 4. The language toggle button automatically cycles through all entries in `LANGS`
@@ -60,16 +110,16 @@ All UI text uses `t(key)` with `STRINGS.th`, `STRINGS.en`, and `STRINGS.ja`. Use
 - `state._boardIdMap[index]` → playerId, `state._boardIndexMap[playerId]` → index
 - Player view: own board (index 0, `.primary`) + others in `.secondary-boards-row`
 - Moderator: caller section visible; players: caller section hidden
-- `API_BASE` auto-detects `localhost:8787` vs production
+- `API_BASE` in `config.ts` auto-detects `localhost:8787` vs production
 
 ### Worker — `worker/`
 
 Cloudflare Worker + Durable Object for multiplayer WebSocket API. The codebase is modular: pure types, utilities, and game logic are in separate files for testability. The Durable Object class orchestrates them.
 
-- **`worker/src/types.ts`** — Shared TypeScript interfaces: `Env`, `Cell`, `PlayerInfo`, `PendingSelection`, `RoomState`, `ClientMessage`
-- **`worker/src/config.ts`** — All tunable server parameters (timeouts, pool sizes, room code format, player limits)
-- **`worker/src/utils.ts`** — Pure utility functions: `shuffle()`, `generateCode()`, `generateId()`
-- **`worker/src/game.ts`** — Pure game logic and data: `CONSONANTS`, `VOWELS`, `generateBoard()`, `checkWin()`, `buildGamePool()`
+- **`worker/src/types.ts`** — Worker-specific interfaces (`Env`, `RoomState`, `ClientMessage`); re-exports shared types
+- **`worker/src/config.ts`** — All tunable server parameters (timeouts, room code format, player limits)
+- **`worker/src/utils.ts`** — Re-exports `shuffle` from shared; adds `generateCode()`, `generateId()`
+- **`worker/src/game.ts`** — Re-exports all game logic from shared (`CONSONANTS`, `VOWELS`, `buildGamePool`, `generateBoard`, `checkWin`, etc.)
 - **`worker/src/index.ts`** — Stateless Worker entry point. Routes: `POST /api/room` (create), `GET /api/room/:code/websocket` (WS upgrade). CORS allowlist here.
 - **`worker/src/room.ts`** — `BingoRoom` Durable Object using Hibernation API. Orchestrates room state, WebSocket lifecycle, and game handlers. Imports pure logic from `game.ts` and `utils.ts`.
 - **`worker/wrangler.toml`** — DO binding `BINGO_ROOM` → `BingoRoom`
@@ -108,12 +158,13 @@ Server → Client: `joined`, `player_joined`, `player_disconnected`, `player_rec
 
 ## Testing
 
-Tests live in `worker/test/` and run via Vitest with `@cloudflare/vitest-pool-workers` (real Workers runtime, not mocks).
+Tests run via `make test`, which runs both worker and client test suites.
 
-- **Run:** `make test` (or `cd worker && npm test`)
+### Worker Tests
+
+Worker tests live in `worker/test/` and use Vitest with `@cloudflare/vitest-pool-workers` (real Workers runtime, not mocks).
+
 - **Config:** `worker/vitest.config.ts` — uses Workers pool with `isolatedStorage: false` (required for WebSocket tests)
-
-### Test structure
 
 | File | Type | What it covers |
 |------|------|----------------|
@@ -121,9 +172,24 @@ Tests live in `worker/test/` and run via Vitest with `@cloudflare/vitest-pool-wo
 | `worker/test/game.test.ts` | Unit | `generateBoard`, `checkWin`, `buildGamePool`, data arrays |
 | `worker/test/room.test.ts` | Integration | Full DO lifecycle via WebSocket: room creation, joins, game start, turn flow, marks, win detection, disconnect/reconnect, alarm cleanup, ready state, replay |
 
+### Client Tests
+
+Client tests live in `client/test/` and use Vitest with jsdom environment.
+
+- **Config:** `client/vitest.config.ts` — jsdom environment
+
+| File | Type | What it covers |
+|------|------|----------------|
+| `client/test/unit/game-logic.test.ts` | Unit | `CONSONANTS`, `VOWELS`, `shuffle`, `generateBoard`, `checkWin` (via shared) |
+| `client/test/unit/i18n.test.ts` | Unit | Language completeness, no empty values, `LANG_LABELS` coverage |
+| `client/test/unit/state.test.ts` | Unit | Initial state values, type compatibility |
+| `client/test/unit/audio.test.ts` | Unit | `CHAR_AUDIO_KEY` entries for all consonants/vowels, uniqueness |
+| `client/test/unit/dom.test.ts` | Unit | `$`, `show`, `hide`, `highlightWinLine` |
+| `client/test/unit/config.test.ts` | Unit | `PLAYER_COLORS` count, `GAME_POOL_SIZES` values |
+
 ### Test expectations
 
-Tests must be kept up-to-date with high coverage. When making changes to the worker:
+Tests must be kept up-to-date with high coverage. When making changes:
 
 - **New pure logic** (game rules, utilities) → add unit tests in the corresponding test file
 - **New message types or handler changes** → add or update integration tests in `room.test.ts`
@@ -133,14 +199,14 @@ Tests must be kept up-to-date with high coverage. When making changes to the wor
 ### Writing good tests
 
 - **Test behavior, not implementation.** Assert on observable outcomes (messages received, state changes) rather than internal method calls.
-- **Prefer pure functions.** If new logic can be a pure function in `game.ts` or `utils.ts`, extract it there and unit test it directly. This is faster and more reliable than testing through WebSocket message flows.
+- **Prefer pure functions.** If new logic can be a pure function in `game.ts`/`utils.ts` (shared or worker), extract it there and unit test it directly. This is faster and more reliable than testing through WebSocket message flows.
 - **Integration tests use real WebSockets.** `room.test.ts` connects actual WebSocket clients to the DO and exchanges messages. Use the `connectWs()` helper and `ofType()` to filter messages.
 - **Avoid testing through storage manipulation.** `runInDurableObject` can read storage for assertions but should not be used to set up game state — the in-memory `this.room` won't reflect storage changes. Drive state through the normal message protocol instead.
 
 ## Hosting
 
-- Client: GitHub Pages at `https://erks.github.io/thai-bingo/`
-- Worker API: Cloudflare Workers
+- Client: GitHub Pages at `https://erks.github.io/thai-bingo/` (deployed via GitHub Actions)
+- Worker API: Cloudflare Workers (deployed via GitHub Actions)
 
 ## Git
 

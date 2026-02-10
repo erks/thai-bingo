@@ -1,0 +1,29 @@
+/* ====== WIN OVERLAY ====== */
+.win-overlay {
+    position: fixed; inset: 0; z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+}
+.win-overlay canvas { position: absolute; inset: 0; pointer-events: none; }
+.win-content {
+    background: white; border-radius: 24px; padding: 40px 50px;
+    text-align: center; z-index: 1001;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: popIn 0.5s ease-out;
+}
+.win-content h2 {
+    font-size: 2.2rem; font-weight: 900;
+    background: linear-gradient(135deg, #f59e0b, #ef4444, #ec4899);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.win-content .winner-name { font-size: 1.5rem; font-weight: 700; margin: 12px 0 24px; color: #4b5563; }
+.win-buttons { display: flex; gap: 12px; justify-content: center; }
+.win-buttons button {
+    padding: 12px 28px; border: none; border-radius: 12px;
+    font-family: inherit; font-size: 1rem; font-weight: 600; cursor: pointer; transition: transform 0.15s;
+}
+.win-buttons button:first-child {
+    background: linear-gradient(135deg, #7c3aed, #a855f7); color: white;
+    box-shadow: 0 4px 12px rgba(124,58,237,0.3);
+}
+.win-buttons button:last-child { background: #f3f4f6; color: #4b5563; }
+.win-buttons button:hover { transform: translateY(-2px); }

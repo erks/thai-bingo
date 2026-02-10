@@ -23,18 +23,6 @@ export const CONFIG = {
   /** Characters used in room codes (ambiguous chars 0/O, 1/I removed). */
   roomCodeChars: "ABCDEFGHJKLMNPQRSTUVWXYZ23456789",
 
-  // --- Game pool sizes ---
-
-  /** Number of characters drawn from the full set per mode. */
-  gamePoolSizes: {
-    consonants: 35,
-    vowels: 24,
-    mixed: 42,
-  } as Record<string, number>,
-
-  /** Fallback pool size when mode is unrecognised. */
-  gamePoolSizeFallback: 42,
-
   // --- Players ---
 
   /** Minimum players required to start (when moderator is NOT playing). */

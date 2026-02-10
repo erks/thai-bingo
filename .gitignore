@@ -1,4 +1,5 @@
 .claude/
-worker/node_modules/
-worker/dist/
+node_modules/
+dist/
 worker/.wrangler/
+worker/coverage/

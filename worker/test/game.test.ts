@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { CONSONANTS, VOWELS, generateBoard, checkWin, buildGamePool } from "../src/game";
+import { CONSONANTS, VOWELS, BOARD_SIZE, EXTRA_POOL_CHARS, generateBoard, checkWin, buildGamePool } from "../src/game";
 
 describe("CONSONANTS", () => {
   it("has 42 entries", () => {
@@ -12,8 +12,8 @@ describe("CONSONANTS", () => {
 });
 
 describe("VOWELS", () => {
-  it("has 24 entries", () => {
-    expect(VOWELS).toHaveLength(24);
+  it("has 31 entries", () => {
+    expect(VOWELS).toHaveLength(31);
   });
 
   it("contains no duplicates", () => {
@@ -138,9 +138,11 @@ describe("checkWin", () => {
 });
 
 describe("buildGamePool", () => {
+  const expectedSize = (available: number) => Math.min(BOARD_SIZE + EXTRA_POOL_CHARS, available);
+
   it("returns correct size for consonants mode", () => {
     const pool = buildGamePool("consonants");
-    expect(pool).toHaveLength(35);
+    expect(pool).toHaveLength(expectedSize(CONSONANTS.length));
     for (const ch of pool) {
       expect(CONSONANTS).toContain(ch);
     }
@@ -148,7 +150,7 @@ describe("buildGamePool", () => {
 
   it("returns correct size for vowels mode", () => {
     const pool = buildGamePool("vowels");
-    expect(pool).toHaveLength(24);
+    expect(pool).toHaveLength(expectedSize(VOWELS.length));
     for (const ch of pool) {
       expect(VOWELS).toContain(ch);
     }
@@ -156,7 +158,7 @@ describe("buildGamePool", () => {
 
   it("returns correct size for mixed mode", () => {
     const pool = buildGamePool("mixed");
-    expect(pool).toHaveLength(42);
+    expect(pool).toHaveLength(expectedSize(CONSONANTS.length + VOWELS.length));
     const allChars = [...CONSONANTS, ...VOWELS];
     for (const ch of pool) {
       expect(allChars).toContain(ch);
@@ -168,9 +170,8 @@ describe("buildGamePool", () => {
     expect(new Set(pool).size).toBe(pool.length);
   });
 
-  it("uses fallback pool size for unknown mode", () => {
+  it("uses mixed pool for unknown mode", () => {
     const pool = buildGamePool("unknown");
-    // Fallback is 42, full pool is consonants+vowels=66, so should get 42
-    expect(pool).toHaveLength(42);
+    expect(pool).toHaveLength(expectedSize(CONSONANTS.length + VOWELS.length));
   });
 });

@@ -1,17 +1,11 @@
 // ============================================================
-// Thai Bingo — Utility Functions
+// Thai Bingo — Worker Utility Functions
 // ============================================================
 
 import { CONFIG } from "./config";
 
-export function shuffle<T>(arr: T[]): T[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
+// Re-export shared utility
+export { shuffle } from "@thai-bingo/shared";
 
 export function generateCode(): string {
   const chars = CONFIG.roomCodeChars;

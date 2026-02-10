@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>บิงโกภาษาไทย</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
+</head>
+<body>
+
+<!-- ====== SETUP SCREEN ====== -->
+<div id="setup-screen" class="screen">
+    <div class="setup-container">
+        <button class="lang-toggle" id="setup-lang-toggle">🇬🇧 EN</button>
+        <h1>🎯 <span data-i18n="title">บิงโกภาษาไทย</span></h1>
+        <p class="subtitle" data-i18n="subtitle">เรียนรู้ตัวอักษรไทยแสนสนุก!</p>
+
+        <div class="setup-section">
+            <label data-i18n="playerCount">จำนวนผู้เล่น</label>
+            <div class="btn-group" id="player-count-btns"></div>
+        </div>
+
+        <div class="setup-section">
+            <label data-i18n="playerNames">ชื่อผู้เล่น</label>
+            <div class="name-inputs-container" id="name-inputs"></div>
+        </div>
+
+        <div class="setup-section">
+            <label data-i18n="mode">โหมด</label>
+            <div class="btn-group" id="mode-btns"></div>
+        </div>
+
+        <div class="hint-toggle">
+            <input type="checkbox" id="hints-check" checked>
+            <label for="hints-check" data-i18n="hintsLabel">เปิดคำใบ้ (ช่องที่ตรงจะกระพริบ)</label>
+        </div>
+
+        <button class="start-button" id="start-game-btn" data-i18n="startGame">เริ่มเกม! 🎮</button>
+    </div>
+</div>
+
+<!-- ====== CONNECTION STATUS ====== -->
+<div id="connection-status" class="connection-banner hidden">⟳ Reconnecting…</div>
+
+<!-- ====== LOBBY SCREEN ====== -->
+<div id="lobby-screen" class="screen hidden">
+    <div class="lobby-container">
+        <h2 id="lobby-title"></h2>
+        <div class="room-code-display" id="lobby-room-code"></div>
+        <div class="lobby-subtitle" id="lobby-subtitle"></div>
+        <div class="share-link-row" id="share-link-row">
+            <input type="text" id="share-link-input" readonly>
+            <button class="copy-btn" id="copy-link-btn"></button>
+        </div>
+        <div class="moderator-play-toggle hidden" id="moderator-play-toggle">
+            <input type="checkbox" id="lobby-moderator-plays">
+            <label for="lobby-moderator-plays" data-i18n="moderatorPlays">I'm playing too</label>
+        </div>
+        <div class="player-list" id="lobby-player-list"></div>
+        <button class="start-button" id="lobby-start-btn" disabled></button>
+        <p id="lobby-waiting-msg" class="hidden" style="color:#9ca3af; margin-top:12px; font-weight:600;"></p>
+    </div>
+</div>
+
+<!-- ====== GAME SCREEN ====== -->
+<div id="game-screen" class="screen hidden">
+    <div class="caller-section">
+        <div class="caller-row">
+            <div class="voice-panel">
+                <button class="randomize-button" id="random-btn">🎲</button>
+                <div style="display:flex; gap:8px;">
+                    <button class="replay-button hidden" id="replay-btn" data-i18n="replay">🔊 ฟังอีกครั้ง</button>
+                    <button class="reveal-button hidden" id="reveal-btn" data-i18n="reveal">เฉลย</button>
+                </div>
+                <div class="voice-status" id="voice-status" data-status-key="statusReady">กดสุ่มเพื่อเริ่ม</div>
+            </div>
+            <div class="caller-current" id="caller-display">
+                <span id="current-char">?</span>
+            </div>
+            <div class="caller-info-col">
+                <div class="caller-info"><span id="draw-count">0</span> / <span id="total-count">0</span></div>
+            </div>
+        </div>
+        <div class="called-history-section">
+            <div class="called-history" id="called-history"></div>
+        </div>
+    </div>
+
+    <div id="boards-container" class="boards-container"></div>
+
+    <div class="bottom-controls">
+        <button class="ctrl-btn" id="back-to-setup-btn" data-i18n="settings">⚙️ ตั้งค่า</button>
+        <button class="ctrl-btn" id="new-game-btn" data-i18n="newGame">🔄 เกมใหม่</button>
+        <button class="ctrl-btn lang-toggle" id="game-lang-toggle">🇬🇧 EN</button>
+    </div>
+</div>
+
+<!-- ====== WIN OVERLAY ====== -->
+<div id="win-overlay" class="win-overlay hidden">
+    <canvas id="confetti-canvas"></canvas>
+    <div class="win-content">
+        <h2 data-i18n="bingo">🎉 บิงโก! 🎉</h2>
+        <p class="winner-name" id="winner-name"></p>
+        <div class="win-buttons">
+            <button id="continue-btn" data-i18n="continue">เล่นต่อ</button>
+            <button id="win-new-game-btn" data-i18n="newGame">เกมใหม่</button>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>

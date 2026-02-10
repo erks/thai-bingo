@@ -1,0 +1,58 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@400;600;700;800;900&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --p1: #4361ee; --p1-light: #818cf8; --p1-bg: #eef2ff; --p1-mark: #c7d2fe;
+    --p2: #e84393; --p2-light: #f472b6; --p2-bg: #fdf2f8; --p2-mark: #fbcfe8;
+    --p3: #00b894; --p3-light: #34d399; --p3-bg: #ecfdf5; --p3-mark: #a7f3d0;
+    --p4: #f39c12; --p4-light: #fbbf24; --p4-bg: #fffbeb; --p4-mark: #fde68a;
+}
+
+body {
+    font-family: 'Noto Serif Thai', serif;
+    background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 40%, #c084fc 100%);
+    min-height: 100vh;
+    overflow-x: hidden;
+    color: #1e1b4b;
+}
+
+.screen { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+.hidden { display: none !important; }
+.connection-banner {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+    background: #f59e0b; color: #000; text-align: center;
+    padding: 6px 12px; font-size: 14px; font-weight: 600;
+}
+
+/* ====== LANGUAGE TOGGLE ====== */
+.lang-toggle {
+    position: absolute; top: 12px; right: 12px;
+    padding: 4px 12px; border: 2px solid #e5e7eb; border-radius: 20px;
+    background: white; font-family: inherit; font-size: 0.8rem; font-weight: 700;
+    color: #6b7280; cursor: pointer; transition: all 0.2s;
+}
+.lang-toggle:hover { border-color: #a78bfa; color: #7c3aed; }
+
+/* ====== BOTTOM CONTROLS ====== */
+.bottom-controls { display: flex; gap: 12px; }
+.ctrl-btn {
+    padding: 10px 24px; border: 2px solid rgba(255,255,255,0.4); border-radius: 12px;
+    background: rgba(255,255,255,0.15); color: white;
+    font-family: inherit; font-size: 0.95rem; font-weight: 600;
+    cursor: pointer; transition: all 0.2s; backdrop-filter: blur(4px);
+}
+.ctrl-btn:hover { background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.6); }
+.bottom-controls .lang-toggle { position: static; background: rgba(255,255,255,0.15); color: white; border-color: rgba(255,255,255,0.4); }
+.bottom-controls .lang-toggle:hover { background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.6); }
+
+/* ====== SHARED ANIMATIONS ====== */
+@keyframes popIn {
+    0% { transform: scale(0.3); opacity: 0; }
+    60% { transform: scale(1.2); }
+    100% { transform: scale(1); opacity: 1; }
+}
+@keyframes chipIn {
+    0% { transform: scale(0); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}

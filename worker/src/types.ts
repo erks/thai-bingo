@@ -1,26 +1,12 @@
 // ============================================================
-// Thai Bingo — Shared Types
+// Thai Bingo — Worker Types
 // ============================================================
+
+// Re-export shared types
+export type { Cell, PlayerInfo, PendingSelection } from "@thai-bingo/shared";
 
 export interface Env {
   BINGO_ROOM: DurableObjectNamespace;
-}
-
-export interface Cell {
-  char: string;
-  marked: boolean;
-  free: boolean;
-}
-
-export interface PlayerInfo {
-  id: string;
-  name: string;
-  connected: boolean;
-}
-
-export interface PendingSelection {
-  r: number;
-  c: number;
 }
 
 export interface RoomState {
@@ -28,15 +14,15 @@ export interface RoomState {
   moderatorId: string;
   moderatorName: string;
   moderatorPlaying: boolean;
-  players: PlayerInfo[];
+  players: import("@thai-bingo/shared").PlayerInfo[];
   mode: string;
   hintsOn: boolean;
   gamePool: string[];
-  boards: Record<string, Cell[][]>;
+  boards: Record<string, import("@thai-bingo/shared").Cell[][]>;
   calledChars: string[];
   currentChar: string | null;
   pendingChar: string | null;
-  pendingSelections: Record<string, PendingSelection>;
+  pendingSelections: Record<string, import("@thai-bingo/shared").PendingSelection>;
   pendingReadyIds: string[];
   phase: "lobby" | "playing";
   winners: string[];

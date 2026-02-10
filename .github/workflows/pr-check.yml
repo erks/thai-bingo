@@ -13,8 +13,9 @@ jobs:
         with:
           node-version: 22
       - run: npm ci
-        working-directory: worker
       - name: Type-check
         run: make fmt
       - name: Tests
         run: make test
+      - name: Build client
+        run: make build
