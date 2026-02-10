@@ -406,14 +406,16 @@
 
         /* ====== READY BUTTON & INDICATORS ====== */
         .ready-button {
-            width: 100%; max-width: 420px; padding: 12px; border: 2px solid #7c3aed; border-radius: 14px;
-            background: white; color: #7c3aed; font-family: inherit; font-size: 1.05rem; font-weight: 700;
-            cursor: pointer; transition: all 0.2s; margin-top: 0;
-        }
-        .ready-button:hover { background: #f5f3ff; }
-        .ready-button.active {
+            width: 100%; max-width: 420px; padding: 14px; border: none; border-radius: 14px;
             background: linear-gradient(135deg, #7c3aed, #a855f7); color: white;
-            border-color: #7c3aed; box-shadow: 0 4px 12px rgba(124,58,237,0.3);
+            font-family: inherit; font-size: 1.1rem; font-weight: 700;
+            cursor: pointer; transition: all 0.2s; margin-top: 0;
+            box-shadow: 0 4px 14px rgba(124,58,237,0.35);
+        }
+        .ready-button:hover { background: linear-gradient(135deg, #6d28d9, #9333ea); box-shadow: 0 6px 18px rgba(124,58,237,0.45); }
+        .ready-button.active {
+            background: linear-gradient(135deg, #059669, #10b981); color: white;
+            box-shadow: 0 4px 12px rgba(5,150,105,0.35);
         }
         .ready-badge {
             display: inline-block; font-size: 0.7rem; margin-left: 6px;
