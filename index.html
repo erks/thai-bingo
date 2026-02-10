@@ -243,6 +243,10 @@
             25% { transform: translateX(-4px); }
             75% { transform: translateX(4px); }
         }
+        @keyframes readyPulse {
+            0%, 100% { box-shadow: 0 0 4px rgba(124,58,237,0.3); }
+            50% { box-shadow: 0 0 14px rgba(124,58,237,0.7); }
+        }
 
         /* Player-specific colors */
         .p0 .board-header { background: linear-gradient(135deg, var(--p1), var(--p1-light)); }
@@ -432,6 +436,11 @@
         .ready-info {
             font-size: 0.85rem; font-weight: 700; color: #7c3aed;
             text-align: center; padding: 4px 0;
+            border-radius: 8px; transition: all 0.3s ease;
+        }
+        .ready-info.all-ready {
+            font-size: 1.05rem; color: #fff; background: #7c3aed;
+            padding: 6px 12px; animation: readyPulse 1.2s ease-in-out infinite;
         }
 
         /* ====== RESPONSIVE ====== */
@@ -641,6 +650,7 @@ const STRINGS = {
         readyBtn: '🙋 พร้อมแล้ว!',
         readyStatus: 'พร้อม',
         playersReady: '{n}/{total} คนพร้อมแล้ว',
+        allReady: 'ทุกคนพร้อมแล้ว!',
         playerDisconnected: 'หลุดการเชื่อมต่อ',
         moderatorDisconnected: 'ผู้ดำเนินเกมหลุดการเชื่อมต่อ',
         reconnecting: 'กำลังเชื่อมต่อใหม่...',
@@ -704,6 +714,7 @@ const STRINGS = {
         readyBtn: "🙋 I'm ready!",
         readyStatus: 'Ready',
         playersReady: '{n}/{total} ready',
+        allReady: 'All players ready!',
         playerDisconnected: 'Disconnected',
         moderatorDisconnected: 'Moderator disconnected',
         reconnecting: 'Reconnecting...',
@@ -767,6 +778,7 @@ const STRINGS = {
         readyBtn: '🙋 準備OK！',
         readyStatus: '準備完了',
         playersReady: '{n}/{total}人が準備完了',
+        allReady: '全員準備完了！',
         playerDisconnected: '切断されました',
         moderatorDisconnected: '司会者が切断されました',
         reconnecting: '再接続中...',
@@ -888,6 +900,8 @@ function sfxCall() { playTone(587, 0.15, 0.2); setTimeout(() => playTone(784, 0.
 function sfxMark() { playTone(880, 0.12, 0.15); }
 function sfxWrong() { playTone(200, 0.15, 0.15, 'square'); }
 function sfxWin() { [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => playTone(f, 0.2, 0.25), i * 140)); }
+function sfxReady() { playTone(660, 0.1, 0.15); }
+function sfxAllReady() { [660, 784, 988].forEach((f, i) => setTimeout(() => playTone(f, 0.12, 0.2), i * 100)); }
 
 // ============================================================
 // UTILITIES
@@ -1851,13 +1865,20 @@ function handleServerMessage(msg) {
             onlineWin(msg);
             break;
 
-        case 'ready_update':
+        case 'ready_update': {
+            const prevCount = state.pendingReadyIds.length;
             state.pendingReadyIds = msg.readyPlayerIds || [];
             state.isReady = state.pendingReadyIds.includes(state.playerId);
             updateReadyButton();
             updateReadyIndicators();
             if (state.role === 'moderator') updateModeratorReadyInfo();
+            const totalParticipants = state.onlinePlayers.length - (state.moderatorPlaying ? 1 : 0);
+            const allReady = state.pendingReadyIds.length === totalParticipants && totalParticipants > 0;
+            if (state.pendingReadyIds.length > prevCount) {
+                if (allReady) sfxAllReady(); else sfxReady();
+            }
             break;
+        }
 
         case 'error':
             alert(msg.message);
@@ -2211,10 +2232,12 @@ function updateModeratorReadyInfo() {
         const voicePanel = document.querySelector('.voice-panel');
         if (voicePanel) voicePanel.appendChild(info);
     }
-    // onlinePlayers includes moderator only when playing, so length = total participants
-    const totalParticipants = state.onlinePlayers.length;
+    // Exclude moderator from total — they have no ready button
+    const totalParticipants = state.onlinePlayers.length - (state.moderatorPlaying ? 1 : 0);
     const n = state.pendingReadyIds.length;
-    info.textContent = t('playersReady').replace('{n}', n).replace('{total}', totalParticipants);
+    const allReady = n === totalParticipants && totalParticipants > 0;
+    info.textContent = allReady ? t('allReady') : t('playersReady').replace('{n}', n).replace('{total}', totalParticipants);
+    info.classList.toggle('all-ready', allReady);
 }
 
 function clearModeratorReadyInfo() {

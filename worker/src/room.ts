@@ -569,10 +569,7 @@ export class BingoRoom implements DurableObject {
   private async handleReady(senderId: string, senderRole: string): Promise<void> {
     if (!this.room) return;
     if (!this.room.pendingChar) return;
-
-    const isPlayingModerator = senderRole === "moderator" && this.room.moderatorPlaying && senderId === this.room.moderatorId;
-    const isPlayer = senderRole === "player";
-    if (!isPlayingModerator && !isPlayer) return;
+    if (senderRole !== "player") return;
 
     const idx = this.room.pendingReadyIds.indexOf(senderId);
     if (idx >= 0) {
