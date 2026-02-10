@@ -2160,8 +2160,7 @@ function renderOnlineStatusBanner() {
 
 function renderReadyButton() {
     if (state.gameType !== 'online') return;
-    const isParticipant = state.role === 'player' || (state.role === 'moderator' && state.moderatorPlaying);
-    if (!isParticipant) return;
+    if (state.role !== 'player') return;
 
     removeReadyButton();
     const btn = document.createElement('button');
@@ -2267,8 +2266,6 @@ function onlineRandomized(pendingChar) {
     document.getElementById('reveal-btn').classList.remove('hidden');
     setVoiceStatus(t('statusPending'), '', 'statusPending');
 
-    // Render ready button for playing moderator, plus ready info
-    if (state.moderatorPlaying) renderReadyButton();
     updateModeratorReadyInfo();
 }
 
