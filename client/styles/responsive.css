@@ -35,15 +35,15 @@
 /* ====== RESPONSIVE ====== */
 @media (max-width: 900px) {
     .players-3 .board-card { width: calc(50% - 8px); }
-    .cell { font-size: 1rem; }
+    .cell { font-size: min(1rem, 4.5cqi); }
 }
 @media (max-width: 600px) {
     .setup-container { padding: 24px; }
     .setup-container h1 { font-size: 1.6rem; }
     .board-card { min-width: 220px; }
     .players-2 .board-card, .players-3 .board-card, .players-4 .board-card { width: 100%; max-width: 360px; }
-    .cell { font-size: 1.1rem; border-radius: 6px; }
-    .boards-container.online-player .board-card.primary .cell { font-size: 1.4rem; }
+    .cell { font-size: min(1.1rem, 4.5cqi); border-radius: 6px; }
+    .boards-container.online-player .board-card.primary .cell { font-size: min(1.4rem, 4.5cqi); }
     .caller-current { width: 72px; height: 72px; }
     .caller-current span { font-size: 1.6rem; }
     .randomize-button { width: 60px; height: 60px; font-size: 1.6rem; }

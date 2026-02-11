@@ -105,14 +105,15 @@
     text-align: center; padding: 8px; border-radius: 10px; margin-bottom: 10px;
     font-weight: 700; font-size: 1rem; color: white;
 }
-.board-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+.board-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; container-type: inline-size; }
 
 .cell {
     aspect-ratio: 1; border-radius: 8px; border: 2px solid #e5e7eb;
     display: flex; align-items: center; justify-content: center;
-    font-size: 1.15rem; font-weight: 700; cursor: pointer;
+    font-size: min(1.15rem, 4.5cqi); font-weight: 700; cursor: pointer;
     transition: all 0.15s; position: relative; background: white;
     user-select: none; -webkit-user-select: none; line-height: 1.1;
+    white-space: nowrap; overflow: hidden;
 }
 .cell:hover:not(.marked):not(.free) { transform: scale(1.05); border-color: #a78bfa; }
 .cell.free {
@@ -166,7 +167,7 @@
 .boards-container.online-player .board-card.secondary {
     width: calc(33.33% - 12px); max-width: 200px; min-width: 160px;
 }
-.boards-container.online-player .board-card.secondary .cell { font-size: 0.8rem; cursor: default; }
+.boards-container.online-player .board-card.secondary .cell { font-size: min(0.8rem, 4.5cqi); cursor: default; }
 .boards-container.online-player .board-card.secondary .cell:hover { transform: none; border-color: #e5e7eb; }
 .secondary-boards-row {
     display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; width: 100%;
