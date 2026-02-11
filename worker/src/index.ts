@@ -3,7 +3,7 @@
 // ============================================================
 
 import { BingoRoom } from "./room";
-import { CONFIG } from "./config";
+import { APP_VERSION, CONFIG } from "./config";
 import type { Env } from "./types";
 import { generateCode } from "./utils";
 
@@ -28,6 +28,7 @@ function corsHeaders(request: Request): Record<string, string> {
     "Access-Control-Allow-Origin": allowed ? origin : ALLOWED_ORIGINS[0],
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
+    "X-App-Version": APP_VERSION,
   };
 }
 
@@ -38,6 +39,11 @@ export default {
     // CORS preflight
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: corsHeaders(request) });
+    }
+
+    // GET /api/version — return app version
+    if (request.method === "GET" && url.pathname === "/api/version") {
+      return Response.json({ version: APP_VERSION }, { headers: corsHeaders(request) });
     }
 
     // POST /api/room — create a new room

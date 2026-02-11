@@ -1,0 +1,123 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - name: Type-check
+        run: make fmt
+      - name: Tests
+        run: make test
+
+  version:
+    needs: check
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.bump.outputs.tag }}
+      version: ${{ steps.bump.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Compute next version
+        id: bump
+        run: |
+          # Find latest v0.1.* tag
+          LATEST=$(git tag --list 'v0.1.*' --sort=-v:refname | head -n1)
+          if [ -z "$LATEST" ]; then
+            NEXT="v0.1.0"
+          else
+            PATCH=${LATEST##*.}
+            NEXT="v0.1.$((PATCH + 1))"
+          fi
+          echo "tag=$NEXT" >> "$GITHUB_OUTPUT"
+          echo "version=$NEXT" >> "$GITHUB_OUTPUT"
+          echo "Next version: $NEXT"
+      - name: Create and push tag
+        run: |
+          git tag "${{ steps.bump.outputs.tag }}"
+          git push origin "${{ steps.bump.outputs.tag }}"
+
+  changes:
+    needs: check
+    runs-on: ubuntu-latest
+    outputs:
+      client: ${{ steps.filter.outputs.client }}
+      worker: ${{ steps.filter.outputs.worker }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        if: github.event_name == 'push'
+        with:
+          filters: |
+            client:
+              - 'client/**'
+              - 'shared/**'
+            worker:
+              - 'worker/**'
+              - 'shared/**'
+      - name: Force all on workflow_dispatch
+        if: github.event_name == 'workflow_dispatch'
+        id: force
+        run: echo "Force-deploying all"
+      # On workflow_dispatch, outputs will be empty — deploy jobs treat empty as true
+
+  deploy-client:
+    needs: [version, changes]
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.client == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - name: Build client
+        run: make build
+        env:
+          APP_VERSION: ${{ needs.version.outputs.version }}
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: client/dist
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  deploy-worker:
+    needs: [version, changes]
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.worker == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - name: Deploy worker
+        working-directory: worker
+        run: npx wrangler deploy --define __APP_VERSION__:\"\'${{ needs.version.outputs.version }}\'\"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

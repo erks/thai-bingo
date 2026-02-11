@@ -46,6 +46,13 @@ body {
 .bottom-controls .lang-toggle { position: static; background: rgba(255,255,255,0.15); color: white; border-color: rgba(255,255,255,0.4); }
 .bottom-controls .lang-toggle:hover { background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.6); }
 
+/* ====== VERSION FOOTER ====== */
+.version-footer {
+    position: fixed; bottom: 4px; right: 8px;
+    font-size: 10px; color: #999; opacity: 0.6;
+    pointer-events: none; z-index: 1;
+}
+
 /* ====== SHARED ANIMATIONS ====== */
 @keyframes popIn {
     0% { transform: scale(0.3); opacity: 0; }

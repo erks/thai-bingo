@@ -1,5 +1,7 @@
 // Thai Bingo — Client Entry Point
 
+import { APP_VERSION } from "./config";
+
 // Styles
 import "../styles/base.css";
 import "../styles/setup.css";
@@ -44,6 +46,12 @@ $("win-new-game-btn")!.addEventListener("click", resetGame);
 $("copy-link-btn")!.addEventListener("click", copyShareLink);
 $("moderator-play-toggle")!.addEventListener("click", (e) => toggleModeratorPlaying(e));
 $("lobby-start-btn")!.addEventListener("click", onlineStartGame);
+
+// Version info
+console.log(`[thai-bingo] client v${APP_VERSION}`);
+document.querySelector('meta[name="app-version"]')?.setAttribute('content', APP_VERSION);
+const vf = document.getElementById('version-footer');
+if (vf) vf.textContent = `v${APP_VERSION}`;
 
 // Apply language and render setup
 applyLang();

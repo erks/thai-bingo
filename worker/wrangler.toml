@@ -10,6 +10,9 @@ bindings = [{ name = "BINGO_ROOM", class_name = "BingoRoom" }]
 tag = "v1"
 new_sqlite_classes = ["BingoRoom"]
 
+[define]
+__APP_VERSION__ = "'dev'"
+
 [observability]
 enabled = true
 head_sampling_rate = 1
