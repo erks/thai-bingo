@@ -48,10 +48,12 @@ $("moderator-play-toggle")!.addEventListener("click", (e) => toggleModeratorPlay
 $("lobby-start-btn")!.addEventListener("click", onlineStartGame);
 
 // Version info
-console.log(`[thai-bingo] client v${APP_VERSION}`);
+const versionTag = APP_VERSION.startsWith('v') ? APP_VERSION : `v${APP_VERSION}`;
+console.log(`[thai-bingo] client ${versionTag}`);
 document.querySelector('meta[name="app-version"]')?.setAttribute('content', APP_VERSION);
-const vf = document.getElementById('version-footer');
-if (vf) vf.textContent = APP_VERSION.startsWith('v') ? APP_VERSION : `v${APP_VERSION}`;
+document.querySelectorAll('[data-version-footer]').forEach(el => {
+    el.textContent = `\u00A9 Thai Bingo ${versionTag}`;
+});
 
 // Apply language and render setup
 applyLang();

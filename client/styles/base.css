@@ -17,7 +17,7 @@ body {
     color: #1e1b4b;
 }
 
-.screen { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+.screen { display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
 .hidden { display: none !important; }
 .connection-banner {
     position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
@@ -48,9 +48,9 @@ body {
 
 /* ====== VERSION FOOTER ====== */
 .version-footer {
-    position: fixed; bottom: 4px; right: 8px;
     font-size: 10px; color: rgba(255, 255, 255, 0.35);
-    pointer-events: none; z-index: 1;
+    text-align: center; padding: 12px 0 4px;
+    pointer-events: none;
 }
 
 /* ====== SHARED ANIMATIONS ====== */
