@@ -187,19 +187,43 @@ Client tests live in `client/test/` and use Vitest with jsdom environment.
 | `client/test/unit/dom.test.ts` | Unit | `$`, `show`, `hide`, `highlightWinLine` |
 | `client/test/unit/config.test.ts` | Unit | `PLAYER_COLORS` count, `GAME_POOL_SIZES` values |
 
-### Test expectations
+### Test-Driven Development (TDD)
 
-Tests must be kept up-to-date with high coverage. When making changes:
+For all non-UI changes (shared logic, worker logic, utilities, game rules, message handling), follow TDD:
 
-- **New pure logic** (game rules, utilities) → add unit tests in the corresponding test file
-- **New message types or handler changes** → add or update integration tests in `room.test.ts`
-- **Bug fixes** → add a regression test that would have caught the bug
-- **All tests must pass** before merging (`make fmt && make test`)
+1. **Write the test first.** Define the expected behavior in a test before writing the implementation. The test should fail initially.
+2. **Write the minimum implementation** to make the test pass.
+3. **Refactor** with confidence, keeping tests green.
+
+This applies to:
+- New pure logic (game rules, utilities) → write unit tests first in the corresponding test file
+- New message types or handler changes → write integration tests first in `room.test.ts`
+- Bug fixes → write a regression test first that reproduces the bug, then fix the code
+
+UI-only changes (CSS, HTML structure, rendering functions that primarily manipulate the DOM) are exempt from TDD but should still have tests where practical.
+
+### Test quality
+
+Tests exist to catch real bugs and document intended behavior, not to inflate coverage numbers. Every test should earn its place.
+
+- **Each test should have a clear reason to exist.** Ask: "What bug would this catch?" or "What behavior does this document?" If the answer is neither, the test is not useful.
+- **Test edge cases and boundaries**, not just the happy path. Empty inputs, off-by-one errors, invalid states, and race conditions are where bugs actually live.
+- **Tests should be independent and deterministic.** No test should depend on another test's side effects or on timing. Use controlled inputs (seeded shuffles, fixed data) where randomness is involved.
+- **Avoid tautological tests** that just mirror the implementation. A test that asserts `add(2, 3) === 2 + 3` catches nothing. Test against independently-derived expected values.
+- **All tests must pass** before merging (`make fmt && make test`).
+
+### Design for testability
+
+Structure code so that testing is straightforward, not an afterthought:
+
+- **Extract pure functions.** If new logic can be a pure function in `game.ts`/`utils.ts` (shared or worker), extract it there and unit test it directly. This is faster and more reliable than testing through WebSocket message flows or DOM manipulation.
+- **Inject dependencies.** When a function needs external state (storage, network, DOM), pass it as a parameter rather than reaching for globals. This makes the function testable without mocking the world.
+- **Separate logic from side effects.** Compute the result in a pure function, then apply the side effect in a thin wrapper. Test the pure function; the wrapper is trivial.
+- **Keep the orchestrator thin.** `room.ts` wires together pure functions — it should not contain logic worth unit-testing on its own.
 
 ### Writing good tests
 
 - **Test behavior, not implementation.** Assert on observable outcomes (messages received, state changes) rather than internal method calls.
-- **Prefer pure functions.** If new logic can be a pure function in `game.ts`/`utils.ts` (shared or worker), extract it there and unit test it directly. This is faster and more reliable than testing through WebSocket message flows.
 - **Integration tests use real WebSockets.** `room.test.ts` connects actual WebSocket clients to the DO and exchanges messages. Use the `connectWs()` helper and `ofType()` to filter messages.
 - **Avoid testing through storage manipulation.** `runInDurableObject` can read storage for assertions but should not be used to set up game state — the in-memory `this.room` won't reflect storage changes. Drive state through the normal message protocol instead.
 
