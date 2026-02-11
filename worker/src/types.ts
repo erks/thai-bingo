@@ -37,4 +37,5 @@ export type ClientMessage =
   | { type: "reveal" }
   | { type: "select"; r: number; c: number }
   | { type: "mark"; r: number; c: number }
-  | { type: "ready" };
+  | { type: "ready" }
+  | { type: "sync" };

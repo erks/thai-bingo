@@ -4,6 +4,9 @@ import { PLAYER_COLORS } from "../config";
 import { $ } from "./dom";
 import { wsSend } from "../ws/connection";
 
+let lobbySyncInterval: ReturnType<typeof setInterval> | null = null;
+const LOBBY_SYNC_MS = 5000;
+
 export function showLobby(): void {
     const setupScreen = $("setup-screen");
     if (setupScreen) setupScreen.classList.add("hidden");
@@ -57,6 +60,19 @@ export function showLobby(): void {
     }
 
     renderLobbyPlayers();
+
+    // Periodically sync lobby state to catch missed player_joined broadcasts
+    stopLobbySync();
+    lobbySyncInterval = setInterval(() => {
+        wsSend({ type: "sync" });
+    }, LOBBY_SYNC_MS);
+}
+
+export function stopLobbySync(): void {
+    if (lobbySyncInterval) {
+        clearInterval(lobbySyncInterval);
+        lobbySyncInterval = null;
+    }
 }
 
 export function toggleModeratorPlaying(event: Event): void {

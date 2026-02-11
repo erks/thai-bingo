@@ -142,9 +142,7 @@ export class BingoRoom implements DurableObject {
         if (this.room.phase === "playing") {
           this.sendGameState(server, id);
         }
-        // Fire-and-forget save — don't block the 101 response.
-        // In-memory state is already updated so subsequent messages work.
-        this.saveRoom().catch(e => console.error("saveRoom failed:", e));
+        await this.saveRoom();
       }
 
       return new Response(null, { status: 101, webSocket: client });
@@ -183,6 +181,16 @@ export class BingoRoom implements DurableObject {
         break;
       case "ready":
         await this.handleReady(senderId, senderRole);
+        break;
+      case "sync":
+        this.sendToId(senderId, {
+          type: "joined",
+          playerId: senderId,
+          players: this.getPlayerList(),
+          phase: this.room.phase,
+          moderatorName: this.room.moderatorName,
+          moderatorPlaying: this.room.moderatorPlaying,
+        });
         break;
     }
   }

@@ -733,6 +733,302 @@ describe("BingoRoom", () => {
     });
   });
 
+  // ---- Sync (lobby poll) ----
+
+  describe("sync", () => {
+    it("returns current player list in lobby phase", async () => {
+      const { moderatorId } = await initRoom(stub);
+      const { ws: modWs, messages: modMsgs } = await connectWs(stub, {
+        role: "moderator",
+        id: moderatorId,
+      });
+      const { ws: p1Ws } = await connectWs(stub, { role: "player", id: "p1", name: "Alice" });
+      const { ws: p2Ws } = await connectWs(stub, { role: "player", id: "p2", name: "Bob" });
+      await tick();
+
+      // Clear messages so we only see the sync response
+      modMsgs.length = 0;
+
+      modWs.send(JSON.stringify({ type: "sync" }));
+      await tick();
+
+      const joined = ofType(modMsgs, "joined");
+      expect(joined).toHaveLength(1);
+      expect(joined[0].playerId).toBe(moderatorId);
+      expect(joined[0].phase).toBe("lobby");
+      const players = joined[0].players as Array<{ id: string; name: string }>;
+      expect(players).toHaveLength(2);
+      expect(players.map((p) => p.name)).toContain("Alice");
+      expect(players.map((p) => p.name)).toContain("Bob");
+
+      modWs.close();
+      p1Ws.close();
+      p2Ws.close();
+    });
+
+    it("player sync returns current player list", async () => {
+      const { moderatorId } = await initRoom(stub);
+      await connectWs(stub, { role: "moderator", id: moderatorId });
+      const { ws: p1Ws, messages: p1Msgs } = await connectWs(stub, { role: "player", id: "p1", name: "Alice" });
+      await connectWs(stub, { role: "player", id: "p2", name: "Bob" });
+      await tick();
+
+      p1Msgs.length = 0;
+
+      p1Ws.send(JSON.stringify({ type: "sync" }));
+      await tick();
+
+      const joined = ofType(p1Msgs, "joined");
+      expect(joined).toHaveLength(1);
+      expect(joined[0].playerId).toBe("p1");
+      const players = joined[0].players as Array<{ id: string; name: string }>;
+      expect(players).toHaveLength(2);
+      expect(players.map((p) => p.name)).toContain("Alice");
+      expect(players.map((p) => p.name)).toContain("Bob");
+
+      p1Ws.close();
+    });
+
+    it("sync on non-existent room is silently ignored", async () => {
+      // Connect to a DO that was never initialized (no POST /init)
+      const { ws, messages } = await connectWs(stub, {
+        role: "player",
+        id: "p1",
+        name: "Alice",
+      });
+      await tick();
+
+      // Should have gotten an error for room not found on connect
+      expect(ofType(messages, "error")).toHaveLength(1);
+      messages.length = 0;
+
+      // Sync should produce no response (room is null, handler returns early)
+      ws.send(JSON.stringify({ type: "sync" }));
+      await tick();
+
+      expect(messages).toHaveLength(0);
+      ws.close();
+    });
+
+    it("sync shows disconnected players with connected: false", async () => {
+      const { moderatorId } = await initRoom(stub);
+      const { ws: modWs, messages: modMsgs } = await connectWs(stub, {
+        role: "moderator",
+        id: moderatorId,
+      });
+      const { ws: p1Ws } = await connectWs(stub, { role: "player", id: "p1", name: "Alice" });
+      const { ws: p2Ws } = await connectWs(stub, { role: "player", id: "p2", name: "Bob" });
+      await tick();
+
+      // Bob disconnects
+      p2Ws.close();
+      await tick();
+
+      modMsgs.length = 0;
+      modWs.send(JSON.stringify({ type: "sync" }));
+      await tick();
+
+      const joined = ofType(modMsgs, "joined");
+      expect(joined).toHaveLength(1);
+      const players = joined[0].players as Array<{ id: string; name: string; connected: boolean }>;
+      expect(players).toHaveLength(2);
+      const alice = players.find((p) => p.name === "Alice")!;
+      const bob = players.find((p) => p.name === "Bob")!;
+      expect(alice.connected).toBe(true);
+      expect(bob.connected).toBe(false);
+
+      modWs.close();
+      p1Ws.close();
+    });
+
+    it("sync during playing phase returns playing state", async () => {
+      const { moderatorId } = await initRoom(stub);
+      const { ws: modWs, messages: modMsgs } = await connectWs(stub, {
+        role: "moderator",
+        id: moderatorId,
+      });
+      const { ws: p1Ws } = await connectWs(stub, { role: "player", id: "p1", name: "Alice" });
+      const { ws: p2Ws } = await connectWs(stub, { role: "player", id: "p2", name: "Bob" });
+      await tick();
+
+      modWs.send(JSON.stringify({ type: "start" }));
+      await tick();
+
+      modMsgs.length = 0;
+      modWs.send(JSON.stringify({ type: "sync" }));
+      await tick();
+
+      const joined = ofType(modMsgs, "joined");
+      expect(joined).toHaveLength(1);
+      expect(joined[0].phase).toBe("playing");
+      const players = joined[0].players as Array<{ id: string; name: string }>;
+      expect(players).toHaveLength(2);
+
+      modWs.close();
+      p1Ws.close();
+      p2Ws.close();
+    });
+
+    it("sync reflects newly joined player that moderator may have missed", async () => {
+      const { moderatorId } = await initRoom(stub);
+      const { ws: modWs, messages: modMsgs } = await connectWs(stub, {
+        role: "moderator",
+        id: moderatorId,
+      });
+      const { ws: p1Ws } = await connectWs(stub, { role: "player", id: "p1", name: "Alice" });
+      await tick();
+
+      // Moderator has seen Alice. Now Bob joins.
+      const { ws: p2Ws } = await connectWs(stub, { role: "player", id: "p2", name: "Bob" });
+      await tick();
+
+      // Even if the player_joined broadcast was missed by the client,
+      // a sync should return the full list including Bob.
+      modMsgs.length = 0;
+      modWs.send(JSON.stringify({ type: "sync" }));
+      await tick();
+
+      const joined = ofType(modMsgs, "joined");
+      expect(joined).toHaveLength(1);
+      const players = joined[0].players as Array<{ id: string; name: string }>;
+      expect(players).toHaveLength(2);
+      expect(players.map((p) => p.name)).toEqual(expect.arrayContaining(["Alice", "Bob"]));
+
+      modWs.close();
+      p1Ws.close();
+      p2Ws.close();
+    });
+  });
+
+  // ---- Three-player join (regression) ----
+
+  describe("three-player join", () => {
+    it("moderator sees all three players after sequential joins", async () => {
+      const { moderatorId } = await initRoom(stub);
+      const { ws: modWs, messages: modMsgs } = await connectWs(stub, {
+        role: "moderator",
+        id: moderatorId,
+      });
+      await tick();
+
+      const { ws: p1Ws } = await connectWs(stub, { role: "player", id: "p1", name: "Alice" });
+      await tick();
+      const { ws: p2Ws } = await connectWs(stub, { role: "player", id: "p2", name: "Bob" });
+      await tick();
+      const { ws: p3Ws } = await connectWs(stub, { role: "player", id: "p3", name: "Charlie" });
+      await tick();
+
+      // After all three join, the last player_joined should list all three
+      const pjMsgs = ofType(modMsgs, "player_joined");
+      expect(pjMsgs.length).toBe(3);
+      const lastPj = pjMsgs[pjMsgs.length - 1];
+      const players = lastPj.players as Array<{ id: string; name: string }>;
+      expect(players).toHaveLength(3);
+      expect(players.map((p) => p.name)).toEqual(["Alice", "Bob", "Charlie"]);
+
+      modWs.close();
+      p1Ws.close();
+      p2Ws.close();
+      p3Ws.close();
+    });
+
+    it("each player_joined broadcast has incrementally growing list", async () => {
+      const { moderatorId } = await initRoom(stub);
+      const { ws: modWs, messages: modMsgs } = await connectWs(stub, {
+        role: "moderator",
+        id: moderatorId,
+      });
+      await tick();
+
+      const { ws: p1Ws } = await connectWs(stub, { role: "player", id: "p1", name: "Alice" });
+      await tick();
+      const { ws: p2Ws } = await connectWs(stub, { role: "player", id: "p2", name: "Bob" });
+      await tick();
+      const { ws: p3Ws } = await connectWs(stub, { role: "player", id: "p3", name: "Charlie" });
+      await tick();
+
+      const pjMsgs = ofType(modMsgs, "player_joined");
+      expect(pjMsgs).toHaveLength(3);
+
+      // First broadcast: only Alice
+      const pj1Players = pjMsgs[0].players as Array<{ name: string }>;
+      expect(pj1Players).toHaveLength(1);
+      expect(pj1Players[0].name).toBe("Alice");
+
+      // Second broadcast: Alice + Bob
+      const pj2Players = pjMsgs[1].players as Array<{ name: string }>;
+      expect(pj2Players).toHaveLength(2);
+      expect(pj2Players.map((p) => p.name)).toEqual(["Alice", "Bob"]);
+
+      // Third broadcast: Alice + Bob + Charlie
+      const pj3Players = pjMsgs[2].players as Array<{ name: string }>;
+      expect(pj3Players).toHaveLength(3);
+      expect(pj3Players.map((p) => p.name)).toEqual(["Alice", "Bob", "Charlie"]);
+
+      modWs.close();
+      p1Ws.close();
+      p2Ws.close();
+      p3Ws.close();
+    });
+
+    it("third player join after a disconnect still shows all players", async () => {
+      const { moderatorId } = await initRoom(stub);
+      const { ws: modWs, messages: modMsgs } = await connectWs(stub, {
+        role: "moderator",
+        id: moderatorId,
+      });
+      await tick();
+
+      const { ws: p1Ws } = await connectWs(stub, { role: "player", id: "p1", name: "Alice" });
+      const { ws: p2Ws } = await connectWs(stub, { role: "player", id: "p2", name: "Bob" });
+      await tick();
+
+      // Bob disconnects
+      p2Ws.close();
+      await tick();
+
+      // Charlie joins — player list should have all 3 (Bob disconnected)
+      const { ws: p3Ws } = await connectWs(stub, { role: "player", id: "p3", name: "Charlie" });
+      await tick();
+
+      const pjMsgs = ofType(modMsgs, "player_joined");
+      const lastPj = pjMsgs[pjMsgs.length - 1];
+      const players = lastPj.players as Array<{ id: string; name: string; connected: boolean }>;
+      expect(players).toHaveLength(3);
+      expect(players.map((p) => p.name)).toEqual(["Alice", "Bob", "Charlie"]);
+
+      // Bob should show as disconnected
+      const bob = players.find((p) => p.name === "Bob")!;
+      expect(bob.connected).toBe(false);
+
+      // Alice and Charlie should be connected
+      expect(players.find((p) => p.name === "Alice")!.connected).toBe(true);
+      expect(players.find((p) => p.name === "Charlie")!.connected).toBe(true);
+
+      modWs.close();
+      p1Ws.close();
+      p3Ws.close();
+    });
+
+    it("player join is persisted to storage", async () => {
+      const { moderatorId } = await initRoom(stub);
+      await connectWs(stub, { role: "moderator", id: moderatorId });
+      await connectWs(stub, { role: "player", id: "p1", name: "Alice" });
+      await connectWs(stub, { role: "player", id: "p2", name: "Bob" });
+      await connectWs(stub, { role: "player", id: "p3", name: "Charlie" });
+      await tick();
+
+      // Verify all three players are persisted in storage
+      await runInDurableObject(stub, async (_instance, state) => {
+        const room = await state.storage.get("room") as Record<string, unknown>;
+        expect(room).toBeDefined();
+        const players = room.players as Array<{ id: string; name: string }>;
+        expect(players).toHaveLength(3);
+        expect(players.map((p) => p.name)).toEqual(["Alice", "Bob", "Charlie"]);
+      });
+    });
+  });
+
   // ---- Replay ----
 
   describe("replay", () => {

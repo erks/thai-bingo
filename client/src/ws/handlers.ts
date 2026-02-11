@@ -4,7 +4,7 @@ import { ensureAudio, sfxCall, sfxMark, sfxWrong, sfxWin, sfxReady, sfxAllReady 
 import { speakChar, stopCharVoiceover } from "../audio/speech";
 import { $ } from "../ui/dom";
 import { renderGame, renderCalledHistory, updateHints } from "../ui/boards";
-import { showLobby, renderLobbyPlayers } from "../ui/lobby";
+import { showLobby, renderLobbyPlayers, stopLobbySync } from "../ui/lobby";
 import {
     renderOnlineStatusBanner, renderReadyButton, renderPlayerReplayButton,
     updateReadyButton, updateReadyIndicators, updateModeratorReadyInfo,
@@ -39,6 +39,7 @@ export function handleServerMessage(msg: Record<string, unknown>): void {
             break;
 
         case "game_start":
+            stopLobbySync();
             onlineGameStart(msg);
             break;
 
