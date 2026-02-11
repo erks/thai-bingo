@@ -229,7 +229,7 @@ Structure code so that testing is straightforward, not an afterthought:
 
 ## Hosting
 
-- Client: GitHub Pages at `https://erks.github.io/thai-bingo/` (deployed via GitHub Actions)
+- Client: GitHub Pages at `https://thaibingo.app` (deployed via GitHub Actions)
 - Worker API: Cloudflare Workers (deployed via GitHub Actions)
 
 ## Git

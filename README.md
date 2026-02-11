@@ -2,13 +2,13 @@
 
 A web-based bingo game for learning Thai alphabet characters — consonants, vowels, or both. Play locally on one screen or online with friends.
 
-**Play now:** https://erks.github.io/thai-bingo/
+**Play now:** https://thaibingo.app
 
 ## How to Play
 
 ### Local Mode
 
-1. **Open the app** at https://erks.github.io/thai-bingo/ (or run `make dev` locally)
+1. **Open the app** at https://thaibingo.app (or run `make dev` locally)
 2. **Set up** — choose player count (2–4), enter names, and select a mode:
    - **พยัญชนะ** — consonants only (42 characters)
    - **สระ** — vowels only (31 characters)

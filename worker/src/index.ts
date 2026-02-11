@@ -11,6 +11,8 @@ export { BingoRoom };
 
 // CORS origins allowed to connect
 const ALLOWED_ORIGINS = [
+  "https://thaibingo.app",
+  "https://www.thaibingo.app",
   "https://erks.github.io",
   "http://localhost:8787",
   "http://localhost:3000",
