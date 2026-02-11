@@ -51,7 +51,7 @@ $("lobby-start-btn")!.addEventListener("click", onlineStartGame);
 console.log(`[thai-bingo] client v${APP_VERSION}`);
 document.querySelector('meta[name="app-version"]')?.setAttribute('content', APP_VERSION);
 const vf = document.getElementById('version-footer');
-if (vf) vf.textContent = `v${APP_VERSION}`;
+if (vf) vf.textContent = APP_VERSION.startsWith('v') ? APP_VERSION : `v${APP_VERSION}`;
 
 // Apply language and render setup
 applyLang();
