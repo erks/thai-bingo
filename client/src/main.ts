@@ -16,6 +16,8 @@ import { startGame } from "./ui/setup";
 import { copyShareLink, toggleModeratorPlaying, onlineStartGame } from "./ui/lobby";
 import { randomizeChar, replayChar, revealChar } from "./game/caller";
 import { continueAfterWin, resetGame, backToSetup } from "./game/win";
+import { ensureAudio } from "./audio/audio";
+import { warmupVoiceover } from "./audio/speech";
 
 // ============================================================
 // INIT
@@ -45,3 +47,16 @@ $("lobby-start-btn")!.addEventListener("click", onlineStartGame);
 
 // Apply language and render setup
 applyLang();
+
+// Unlock audio on first user interaction (required for mobile browsers).
+// Mobile Safari and Chrome require a user gesture to "bless" audio playback.
+// Once blessed, the AudioContext and the reusable HTMLAudioElement can play
+// from non-gesture contexts (e.g. WebSocket message handlers).
+function unlockAudio(): void {
+    ensureAudio();
+    warmupVoiceover();
+    document.removeEventListener("click", unlockAudio, true);
+    document.removeEventListener("touchstart", unlockAudio, true);
+}
+document.addEventListener("click", unlockAudio, { capture: true });
+document.addEventListener("touchstart", unlockAudio, { capture: true });

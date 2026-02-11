@@ -37,22 +37,37 @@ export const CHAR_AUDIO_KEY: Record<string, string> = {
     '-รร': 'sara-an-rohan', 'ฤ': 'sara-reu-short', 'ฤๅ': 'sara-reu-long',
 };
 
-let charVoiceover: HTMLAudioElement | null = null;
+// Single reusable audio element — "blessed" once on first user gesture so
+// subsequent .play() calls work even from non-gesture contexts (e.g. WebSocket
+// handlers on mobile browsers).
+const voiceEl = new Audio();
+
+// Tiny silent WAV (1 sample, 16-bit mono, 44.1 kHz)
+const SILENT_WAV = "data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQIAAAAAAA==";
+
+let _warmedUp = false;
+
+/** Pre-unlock the voiceover element. Must be called during a user gesture. */
+export function warmupVoiceover(): void {
+    if (_warmedUp) return;
+    _warmedUp = true;
+    voiceEl.src = SILENT_WAV;
+    voiceEl.play().then(() => voiceEl.pause()).catch(() => {});
+    // Pre-load audio data module so speakChar resolves instantly later
+    import("./audio-data").catch(() => {});
+}
 
 export function speakChar(char: string): void {
-    if (charVoiceover) {
-        charVoiceover.pause();
-        charVoiceover.currentTime = 0;
-    }
+    voiceEl.pause();
+    voiceEl.currentTime = 0;
     const key = CHAR_AUDIO_KEY[char];
     if (!key) return;
 
-    // Dynamically import the audio data module
     import("./audio-data").then(mod => {
         const data = mod.AUDIO_DATA.get(key);
         if (data) {
-            charVoiceover = new Audio("data:audio/mpeg;base64," + data);
-            charVoiceover.play().catch(err => {
+            voiceEl.src = "data:audio/mpeg;base64," + data;
+            voiceEl.play().catch(err => {
                 console.log("Audio playback blocked:", err);
             });
         }
@@ -60,8 +75,6 @@ export function speakChar(char: string): void {
 }
 
 export function stopCharVoiceover(): void {
-    if (charVoiceover) {
-        charVoiceover.pause();
-        charVoiceover.currentTime = 0;
-    }
+    voiceEl.pause();
+    voiceEl.currentTime = 0;
 }
