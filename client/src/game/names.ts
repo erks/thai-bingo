@@ -147,5 +147,7 @@ export function generateRandomName(lang: string): string {
   const isEn = !NAME_POOLS[lang] || lang === "en";
   const adj = pool.adjectives[Math.floor(Math.random() * pool.adjectives.length)];
   const animal = pool.animals[Math.floor(Math.random() * pool.animals.length)];
-  return isEn ? `${adj} ${animal}` : `${adj}${animal}`;
+  if (isEn) return `${adj} ${animal}`;
+  if (lang === "th") return `${animal}${adj}`;
+  return `${adj}${animal}`;
 }

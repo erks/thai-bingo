@@ -67,6 +67,15 @@ describe("generateRandomName", () => {
     expect(name).not.toContain(" ");
   });
 
+  it("Thai names use noun-adjective order (animal first)", () => {
+    // Run enough times to confirm pattern
+    for (let i = 0; i < 20; i++) {
+      const name = generateRandomName("th");
+      const startsWithAnimal = NAME_POOLS.th.animals.some(a => name.startsWith(a));
+      expect(startsWithAnimal, `"${name}" should start with an animal`).toBe(true);
+    }
+  });
+
   it("Japanese names do not contain a space", () => {
     const name = generateRandomName("ja");
     expect(name).not.toContain(" ");
