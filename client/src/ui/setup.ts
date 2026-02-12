@@ -100,7 +100,7 @@ export function initSetup(): void {
 
             const isBot = state.botPlayers[i];
             if (isBot) {
-                input.value = t("botPlayer") + " " + (i + 1);
+                input.value = state.players[i] || generateRandomName(state.lang);
                 input.disabled = true;
                 input.classList.add("bot-input");
             } else if (state.players[i]) {
@@ -113,9 +113,10 @@ export function initSetup(): void {
             diceBtn.textContent = "\uD83C\uDFB2";
             diceBtn.title = t("randomName");
             diceBtn.addEventListener("click", () => {
-                input.value = generateRandomName(state.lang);
+                const name = generateRandomName(state.lang);
+                input.value = name;
+                if (isBot) state.players[i] = name;
             });
-            if (isBot) diceBtn.classList.add("hidden");
 
             const botBtn = document.createElement("button");
             botBtn.type = "button";
@@ -124,6 +125,11 @@ export function initSetup(): void {
             botBtn.title = t("botToggle");
             botBtn.addEventListener("click", () => {
                 state.botPlayers[i] = !state.botPlayers[i];
+                if (state.botPlayers[i]) {
+                    state.players[i] = generateRandomName(state.lang);
+                } else {
+                    state.players[i] = "";
+                }
                 initSetup();
             });
 
@@ -282,12 +288,8 @@ export function startGame(): void {
 
     state.players = [];
     for (let i = 0; i < state.playerCount; i++) {
-        if (state.botPlayers[i]) {
-            state.players.push(t("botPlayer") + " " + (i + 1));
-        } else {
-            const input = $("name-" + i) as HTMLInputElement | null;
-            state.players.push(input && input.value.trim() ? input.value.trim() : t("defaultPlayer") + " " + (i + 1));
-        }
+        const input = $("name-" + i) as HTMLInputElement | null;
+        state.players.push(input && input.value.trim() ? input.value.trim() : t("defaultPlayer") + " " + (i + 1));
     }
     state.hintsOn = ($("hints-check") as HTMLInputElement | null)?.checked ?? true;
 
