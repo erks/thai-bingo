@@ -87,6 +87,10 @@ export function initSetup(): void {
         while (state.botPlayers.length < state.playerCount) state.botPlayers.push(false);
         state.botPlayers.length = state.playerCount;
 
+        // Ensure players array is sized correctly
+        while (state.players.length < state.playerCount) state.players.push("");
+        state.players.length = state.playerCount;
+
         for (let i = 0; i < state.playerCount; i++) {
             const row = document.createElement("div");
             row.className = "name-input-row";
@@ -101,11 +105,16 @@ export function initSetup(): void {
             const isBot = state.botPlayers[i];
             if (isBot) {
                 input.value = state.players[i] || generateRandomName(state.lang);
+                state.players[i] = input.value;
                 input.disabled = true;
                 input.classList.add("bot-input");
             } else if (state.players[i]) {
                 input.value = state.players[i];
             }
+
+            input.addEventListener("input", () => {
+                state.players[i] = input.value;
+            });
 
             const diceBtn = document.createElement("button");
             diceBtn.type = "button";
@@ -115,7 +124,7 @@ export function initSetup(): void {
             diceBtn.addEventListener("click", () => {
                 const name = generateRandomName(state.lang);
                 input.value = name;
-                if (isBot) state.players[i] = name;
+                state.players[i] = name;
             });
 
             const botBtn = document.createElement("button");
