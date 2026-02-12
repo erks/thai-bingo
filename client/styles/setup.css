@@ -61,6 +61,15 @@
     background: #f3f4f6; color: #9ca3af; cursor: not-allowed;
 }
 
+/* ====== NAME RANDOMIZE ====== */
+.name-randomize {
+    width: 36px; height: 36px; padding: 0; border: 2px solid #e5e7eb; border-radius: 10px;
+    background: white; font-size: 1.1rem; cursor: pointer; transition: all 0.2s;
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+}
+.name-randomize:hover { border-color: #a78bfa; background: #f5f3ff; }
+.name-randomize:active { transform: scale(0.9); }
+
 /* ====== ONLINE SETUP ====== */
 .online-setup-section { margin-bottom: 16px; text-align: left; }
 .online-setup-section > label {
@@ -70,6 +79,7 @@
     width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 12px;
     font-family: inherit; font-size: 1rem; outline: none; transition: border-color 0.2s;
 }
+.online-setup-section .name-input-row input[type="text"] { width: auto; flex: 1; }
 .online-setup-section input[type="text"]:focus { border-color: #7c3aed; }
 .room-code-input {
     font-family: monospace !important; font-size: 1.8rem !important; font-weight: 900 !important;

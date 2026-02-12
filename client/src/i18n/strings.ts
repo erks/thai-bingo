@@ -13,7 +13,7 @@ export type StringKey =
     | "statusCharRevealed" | "readyBtn" | "readyStatus" | "playersReady" | "allReady"
     | "playerDisconnected" | "moderatorDisconnected" | "reconnecting"
     | "errorRoomNotFound" | "errorConnection" | "connecting"
-    | "botToggle" | "botPlayer";
+    | "botToggle" | "botPlayer" | "randomName";
 
 export type StringMap = Record<StringKey, string>;
 
@@ -83,6 +83,7 @@ export const STRINGS: Record<string, StringMap> = {
         connecting: 'กำลังเชื่อมต่อ...',
         botToggle: 'สลับบอท',
         botPlayer: 'บอท',
+        randomName: 'สุ่มชื่อ',
     },
     en: {
         title: 'Thai Alphabet Bingo',
@@ -149,6 +150,7 @@ export const STRINGS: Record<string, StringMap> = {
         connecting: 'Connecting...',
         botToggle: 'Toggle bot',
         botPlayer: 'Bot',
+        randomName: 'Random name',
     },
     ja: {
         title: 'タイ文字ビンゴ',
@@ -215,6 +217,7 @@ export const STRINGS: Record<string, StringMap> = {
         connecting: '接続中...',
         botToggle: 'ボット切替',
         botPlayer: 'ボット',
+        randomName: 'ランダム名前',
     }
 };
 

@@ -7,6 +7,7 @@ import { $ } from "./dom";
 import { renderGame } from "./boards";
 import { setVoiceStatus } from "../game/caller";
 import { isAllBots, startAutoPlay } from "../game/bot";
+import { generateRandomName } from "../game/names";
 
 export function initSetup(): void {
     // --- Game type toggle ---
@@ -106,6 +107,16 @@ export function initSetup(): void {
                 input.value = state.players[i];
             }
 
+            const diceBtn = document.createElement("button");
+            diceBtn.type = "button";
+            diceBtn.className = "name-randomize";
+            diceBtn.textContent = "\uD83C\uDFB2";
+            diceBtn.title = t("randomName");
+            diceBtn.addEventListener("click", () => {
+                input.value = generateRandomName(state.lang);
+            });
+            if (isBot) diceBtn.classList.add("hidden");
+
             const botBtn = document.createElement("button");
             botBtn.type = "button";
             botBtn.className = "bot-toggle" + (isBot ? " active" : "");
@@ -118,6 +129,7 @@ export function initSetup(): void {
 
             row.appendChild(dot);
             row.appendChild(input);
+            row.appendChild(diceBtn);
             row.appendChild(botBtn);
             nameContainer.appendChild(row);
         }
@@ -174,11 +186,23 @@ export function renderOnlineSetup(): void {
         const nameLabel = document.createElement("label");
         nameLabel.textContent = t("moderatorName");
         nameDiv.appendChild(nameLabel);
+        const nameRow = document.createElement("div");
+        nameRow.className = "name-input-row";
         const nameInput = document.createElement("input");
         nameInput.type = "text";
         nameInput.id = "moderator-name";
         nameInput.placeholder = t("moderatorName");
-        nameDiv.appendChild(nameInput);
+        nameRow.appendChild(nameInput);
+        const modDice = document.createElement("button");
+        modDice.type = "button";
+        modDice.className = "name-randomize";
+        modDice.textContent = "\uD83C\uDFB2";
+        modDice.title = t("randomName");
+        modDice.addEventListener("click", () => {
+            nameInput.value = generateRandomName(state.lang);
+        });
+        nameRow.appendChild(modDice);
+        nameDiv.appendChild(nameRow);
         section.appendChild(nameDiv);
 
         const createBtn = document.createElement("button");
@@ -220,11 +244,23 @@ export function renderOnlineSetup(): void {
         const nameLabel = document.createElement("label");
         nameLabel.textContent = t("joinName");
         nameDiv.appendChild(nameLabel);
+        const nameRow = document.createElement("div");
+        nameRow.className = "name-input-row";
         const nameInput = document.createElement("input");
         nameInput.type = "text";
         nameInput.id = "join-player-name";
         nameInput.placeholder = t("joinName");
-        nameDiv.appendChild(nameInput);
+        nameRow.appendChild(nameInput);
+        const joinDice = document.createElement("button");
+        joinDice.type = "button";
+        joinDice.className = "name-randomize";
+        joinDice.textContent = "\uD83C\uDFB2";
+        joinDice.title = t("randomName");
+        joinDice.addEventListener("click", () => {
+            nameInput.value = generateRandomName(state.lang);
+        });
+        nameRow.appendChild(joinDice);
+        nameDiv.appendChild(nameRow);
         section.appendChild(nameDiv);
 
         const joinBtn = document.createElement("button");
