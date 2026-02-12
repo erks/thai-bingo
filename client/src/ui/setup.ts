@@ -64,7 +64,7 @@ export function initSetup(): void {
         pcContainer.innerHTML = "";
         [1, 2, 3, 4].forEach(n => {
             const btn = document.createElement("button");
-            btn.textContent = n + " " + t("playerUnit");
+            btn.textContent = n + " " + (n === 1 ? t("playerUnitSingular") : t("playerUnit"));
             btn.className = n === state.playerCount ? "active" : "";
             btn.addEventListener("click", () => { state.playerCount = n; initSetup(); });
             pcContainer.appendChild(btn);

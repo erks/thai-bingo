@@ -1,7 +1,7 @@
 export type StringKey =
     | "title" | "subtitle" | "playerCount" | "playerNames" | "mode"
     | "modeConsonants" | "modeVowels" | "modeMixed" | "hintsLabel" | "startGame"
-    | "playerUnit" | "defaultPlayer" | "replay" | "reveal" | "settings" | "newGame"
+    | "playerUnit" | "playerUnitSingular" | "defaultPlayer" | "replay" | "reveal" | "settings" | "newGame"
     | "bingo" | "continue" | "statusReady" | "statusPending" | "statusNext" | "statusEmpty"
     | "gameTypeLocal" | "gameTypeOnline" | "gameType" | "createRoom" | "joinRoom"
     | "onlineRole" | "moderatorName" | "moderatorPlays" | "createRoomBtn"
@@ -29,6 +29,7 @@ export const STRINGS: Record<string, StringMap> = {
         hintsLabel: 'เปิดคำใบ้ (ช่องที่ตรงจะกระพริบ)',
         startGame: 'เริ่มเกม! 🎮',
         playerUnit: 'คน',
+        playerUnitSingular: 'คน',
         defaultPlayer: 'ผู้เล่น',
         replay: '🔊 ฟังอีกครั้ง',
         reveal: 'เฉลย',
@@ -92,6 +93,7 @@ export const STRINGS: Record<string, StringMap> = {
         hintsLabel: 'Enable hints (matching cells pulse)',
         startGame: 'Start Game! 🎮',
         playerUnit: 'players',
+        playerUnitSingular: 'player',
         defaultPlayer: 'Player',
         replay: '🔊 Replay',
         reveal: 'Reveal',
@@ -155,6 +157,7 @@ export const STRINGS: Record<string, StringMap> = {
         hintsLabel: 'ヒントを有効にする（一致するマスが点滅）',
         startGame: 'ゲーム開始！ 🎮',
         playerUnit: '人',
+        playerUnitSingular: '人',
         defaultPlayer: 'プレイヤー',
         replay: '🔊 もう一度',
         reveal: '答え合わせ',
