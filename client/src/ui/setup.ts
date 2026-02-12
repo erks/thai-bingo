@@ -62,7 +62,7 @@ export function initSetup(): void {
     const pcContainer = $("player-count-btns");
     if (pcContainer) {
         pcContainer.innerHTML = "";
-        [2, 3, 4].forEach(n => {
+        [1, 2, 3, 4].forEach(n => {
             const btn = document.createElement("button");
             btn.textContent = n + " " + t("playerUnit");
             btn.className = n === state.playerCount ? "active" : "";

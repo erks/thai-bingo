@@ -97,6 +97,7 @@
     background: white; border-radius: 16px; padding: 12px;
     box-shadow: 0 6px 24px rgba(0,0,0,0.1); flex: 0 1 auto; min-width: 260px;
 }
+.players-1 .board-card { width: 100%; max-width: 420px; }
 .players-2 .board-card { width: calc(50% - 8px); max-width: 380px; }
 .players-3 .board-card { width: calc(33.33% - 12px); max-width: 320px; }
 .players-4 .board-card { width: calc(50% - 8px); max-width: 320px; }

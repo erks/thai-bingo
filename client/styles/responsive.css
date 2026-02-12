@@ -41,7 +41,7 @@
     .setup-container { padding: 24px; }
     .setup-container h1 { font-size: 1.6rem; }
     .board-card { min-width: 220px; }
-    .players-2 .board-card, .players-3 .board-card, .players-4 .board-card { width: 100%; max-width: 360px; }
+    .players-1 .board-card, .players-2 .board-card, .players-3 .board-card, .players-4 .board-card { width: 100%; max-width: 360px; }
     .cell { font-size: min(1.1rem, 4.5cqi); border-radius: 6px; }
     .boards-container.online-player .board-card.primary .cell { font-size: min(1.4rem, 4.5cqi); }
     .caller-current { width: 72px; height: 72px; }
