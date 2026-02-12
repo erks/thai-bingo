@@ -13,6 +13,7 @@ export { BingoRoom };
 const ALLOWED_ORIGINS = [
   "https://thaibingo.app",
   "https://www.thaibingo.app",
+  "https://thai-bingo.pages.dev",
   "https://erks.github.io",
   "http://localhost:8787",
   "http://localhost:3000",

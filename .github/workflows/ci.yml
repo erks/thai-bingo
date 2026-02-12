@@ -7,8 +7,6 @@ on:
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -86,9 +84,6 @@ jobs:
     needs: [version, changes]
     if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.client == 'true'
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -99,12 +94,30 @@ jobs:
         run: make build
         env:
           APP_VERSION: ${{ needs.version.outputs.version }}
+      - name: Deploy to Cloudflare Pages
+        working-directory: client
+        run: npx wrangler pages deploy dist --project-name=thai-bingo --branch main
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+  deploy-redirect:
+    needs: [changes]
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.client == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          mkdir -p redirect
+          cp client/public/gh-pages-redirect.html redirect/index.html
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: client/dist
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          path: redirect
+      - uses: actions/deploy-pages@v4
 
   deploy-worker:
     needs: [version, changes]

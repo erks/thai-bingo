@@ -23,14 +23,14 @@ Thai Bingo (บิงโกภาษาไทย) — a web app for learning Tha
 GitHub Actions workflows automatically run checks and deployments:
 
 - **PR Check (`.github/workflows/pr-check.yml`)** — Runs `make fmt`, `make test`, and `make build` on all PRs to `main`. Must pass before merge.
-- **Deploy Worker (`.github/workflows/deploy-worker.yml`)** — On push to `main` (when `worker/**` or `shared/**` changes):
-  1. Runs `make fmt` to type-check
-  2. Deploys to Cloudflare Workers if checks pass
-  3. Requires `CLOUDFLARE_API_TOKEN` secret configured in repo settings
-- **Deploy Client (`.github/workflows/deploy-client.yml`)** — On push to `main` (when `client/**` or `shared/**` changes):
+- **Deploy Worker (`.github/workflows/ci.yml` → `deploy-worker`)** — On push to `main` (when `worker/**` or `shared/**` changes):
+  1. Deploys to Cloudflare Workers via `wrangler deploy`
+  2. Requires `CLOUDFLARE_API_TOKEN` secret configured in repo settings
+- **Deploy Client (`.github/workflows/ci.yml` → `deploy-client`)** — On push to `main` (when `client/**` or `shared/**` changes):
   1. Builds client via `make build`
-  2. Deploys to GitHub Pages via Actions
-  3. Requires GitHub Pages source set to "GitHub Actions" in repo settings
+  2. Deploys to Cloudflare Pages via `wrangler pages deploy`
+  3. Requires `CLOUDFLARE_API_TOKEN` secret configured in repo settings
+- **Deploy Redirect (`.github/workflows/ci.yml` → `deploy-redirect`)** — Deploys a redirect page to GitHub Pages so `erks.github.io/thai-bingo` redirects to `thaibingo.app`
 
 ## Architecture
 
@@ -229,8 +229,9 @@ Structure code so that testing is straightforward, not an afterthought:
 
 ## Hosting
 
-- Client: GitHub Pages at `https://thaibingo.app` (deployed via GitHub Actions)
+- Client: Cloudflare Pages at `https://thaibingo.app` (deployed via GitHub Actions + Wrangler)
 - Worker API: Cloudflare Workers (deployed via GitHub Actions)
+- Legacy redirect: GitHub Pages at `erks.github.io/thai-bingo` → `thaibingo.app`
 
 ## Git
 
