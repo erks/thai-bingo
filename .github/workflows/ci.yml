@@ -95,7 +95,8 @@ jobs:
         env:
           APP_VERSION: ${{ needs.version.outputs.version }}
       - name: Deploy to Cloudflare Pages
-        run: npx wrangler pages deploy client/dist --project-name=thai-bingo --branch main
+        working-directory: worker
+        run: npx wrangler pages deploy ../client/dist --project-name=thai-bingo --branch main
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
