@@ -6,8 +6,10 @@ import { $ } from "../ui/dom";
 import { startConfetti, stopConfetti } from "./confetti";
 import { wsSend } from "../ws/connection";
 import { startGame } from "../ui/setup";
+import { stopAutoPlay, startAutoPlay, isAllBots } from "./bot";
 
 export function showWin(pi: number): void {
+    stopAutoPlay();
     sfxWin();
     state.gameActive = false;
     stopCharVoiceover();
@@ -23,9 +25,13 @@ export function continueAfterWin(): void {
     const overlay = $("win-overlay");
     if (overlay) overlay.classList.add("hidden");
     state.gameActive = true;
+    if (isAllBots(state.botPlayers)) {
+        startAutoPlay();
+    }
 }
 
 export function resetGame(): void {
+    stopAutoPlay();
     stopConfetti();
     stopCharVoiceover();
     const overlay = $("win-overlay");
@@ -40,6 +46,7 @@ export function resetGame(): void {
 }
 
 export function backToSetup(): void {
+    stopAutoPlay();
     stopConfetti();
     stopCharVoiceover();
     if (state.ws) { state.ws.close(); state.ws = null; }

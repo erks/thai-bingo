@@ -12,7 +12,8 @@ export type StringKey =
     | "statusModeratorRandomizing" | "statusSelectYourCell" | "statusWaitingReveal"
     | "statusCharRevealed" | "readyBtn" | "readyStatus" | "playersReady" | "allReady"
     | "playerDisconnected" | "moderatorDisconnected" | "reconnecting"
-    | "errorRoomNotFound" | "errorConnection" | "connecting";
+    | "errorRoomNotFound" | "errorConnection" | "connecting"
+    | "botToggle" | "botPlayer";
 
 export type StringMap = Record<StringKey, string>;
 
@@ -80,6 +81,8 @@ export const STRINGS: Record<string, StringMap> = {
         errorRoomNotFound: 'ไม่พบห้อง',
         errorConnection: 'เชื่อมต่อไม่ได้',
         connecting: 'กำลังเชื่อมต่อ...',
+        botToggle: 'สลับบอท',
+        botPlayer: 'บอท',
     },
     en: {
         title: 'Thai Alphabet Bingo',
@@ -144,6 +147,8 @@ export const STRINGS: Record<string, StringMap> = {
         errorRoomNotFound: 'Room not found',
         errorConnection: 'Connection failed',
         connecting: 'Connecting...',
+        botToggle: 'Toggle bot',
+        botPlayer: 'Bot',
     },
     ja: {
         title: 'タイ文字ビンゴ',
@@ -208,6 +213,8 @@ export const STRINGS: Record<string, StringMap> = {
         errorRoomNotFound: 'ルームが見つかりません',
         errorConnection: '接続に失敗しました',
         connecting: '接続中...',
+        botToggle: 'ボット切替',
+        botPlayer: 'ボット',
     }
 };
 

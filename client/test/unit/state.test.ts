@@ -16,6 +16,8 @@ describe("state", () => {
     expect(state.calledChars).toEqual([]);
     expect(state.role).toBeNull();
     expect(state.ws).toBeNull();
+    expect(state.botPlayers).toEqual([]);
+    expect(state.autoPlayTimerId).toBeNull();
   });
 
   it("GameState interface accepts valid state values", async () => {

@@ -6,6 +6,7 @@ import { $ } from "../ui/dom";
 import { wsSend } from "../ws/connection";
 import { renderCalledHistory, updateHints } from "../ui/boards";
 import { confirmMark } from "./marking";
+import { scheduleBotSelections, cancelBotSelections } from "./bot";
 
 export function setVoiceStatus(text: string, type: string, i18nKey?: string): void {
     const el = $("voice-status");
@@ -49,6 +50,7 @@ export function randomizeChar(): void {
     const revealBtn = $("reveal-btn");
     if (revealBtn) revealBtn.classList.remove("hidden");
     setVoiceStatus(t("statusPending"), "", "statusPending");
+    scheduleBotSelections();
 }
 
 export function replayChar(): void {
@@ -62,6 +64,7 @@ export function replayChar(): void {
 
 export function revealChar(): void {
     if (!state.pendingChar) return;
+    cancelBotSelections();
 
     if (state.gameType === "online" && state.role === "moderator") {
         stopCharVoiceover();

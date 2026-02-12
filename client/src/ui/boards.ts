@@ -71,7 +71,7 @@ export function renderBoards(): void {
 
         const header = document.createElement("div");
         header.className = "board-header";
-        header.textContent = state.players[pi];
+        header.textContent = state.players[pi] + (state.botPlayers[pi] ? " \uD83E\uDD16" : "");
         card.appendChild(header);
 
         const grid = document.createElement("div");
@@ -88,7 +88,7 @@ export function renderBoards(): void {
                 if (cell.free) el.classList.add("free");
                 if (cell.marked && !cell.free) el.classList.add("marked");
 
-                const canClick = !isOnline || (hasOwnBoard && state._boardIdMap[pi] === state.myBoardId);
+                const canClick = !state.botPlayers[pi] && (!isOnline || (hasOwnBoard && state._boardIdMap[pi] === state.myBoardId));
                 if (!cell.free && !cell.marked && canClick) {
                     el.addEventListener("click", () => markCell(pi, r, c));
                 }

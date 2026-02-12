@@ -6,6 +6,7 @@ import { ensureAudio } from "../audio/audio";
 import { $ } from "./dom";
 import { renderGame } from "./boards";
 import { setVoiceStatus } from "../game/caller";
+import { isAllBots, startAutoPlay } from "../game/bot";
 
 export function initSetup(): void {
     // --- Game type toggle ---
@@ -66,7 +67,13 @@ export function initSetup(): void {
             const btn = document.createElement("button");
             btn.textContent = n + " " + (n === 1 ? t("playerUnitSingular") : t("playerUnit"));
             btn.className = n === state.playerCount ? "active" : "";
-            btn.addEventListener("click", () => { state.playerCount = n; initSetup(); });
+            btn.addEventListener("click", () => {
+                state.playerCount = n;
+                // Resize botPlayers to match new player count
+                while (state.botPlayers.length < n) state.botPlayers.push(false);
+                state.botPlayers.length = n;
+                initSetup();
+            });
             pcContainer.appendChild(btn);
         });
     }
@@ -75,6 +82,10 @@ export function initSetup(): void {
     const nameContainer = $("name-inputs");
     if (nameContainer) {
         nameContainer.innerHTML = "";
+        // Ensure botPlayers array is sized correctly
+        while (state.botPlayers.length < state.playerCount) state.botPlayers.push(false);
+        state.botPlayers.length = state.playerCount;
+
         for (let i = 0; i < state.playerCount; i++) {
             const row = document.createElement("div");
             row.className = "name-input-row";
@@ -85,9 +96,29 @@ export function initSetup(): void {
             input.type = "text";
             input.placeholder = t("defaultPlayer") + " " + (i + 1);
             input.id = "name-" + i;
-            if (state.players[i]) input.value = state.players[i];
+
+            const isBot = state.botPlayers[i];
+            if (isBot) {
+                input.value = t("botPlayer") + " " + (i + 1);
+                input.disabled = true;
+                input.classList.add("bot-input");
+            } else if (state.players[i]) {
+                input.value = state.players[i];
+            }
+
+            const botBtn = document.createElement("button");
+            botBtn.type = "button";
+            botBtn.className = "bot-toggle" + (isBot ? " active" : "");
+            botBtn.textContent = "\uD83E\uDD16";
+            botBtn.title = t("botToggle");
+            botBtn.addEventListener("click", () => {
+                state.botPlayers[i] = !state.botPlayers[i];
+                initSetup();
+            });
+
             row.appendChild(dot);
             row.appendChild(input);
+            row.appendChild(botBtn);
             nameContainer.appendChild(row);
         }
     }
@@ -215,8 +246,12 @@ export function startGame(): void {
 
     state.players = [];
     for (let i = 0; i < state.playerCount; i++) {
-        const input = $("name-" + i) as HTMLInputElement | null;
-        state.players.push(input && input.value.trim() ? input.value.trim() : t("defaultPlayer") + " " + (i + 1));
+        if (state.botPlayers[i]) {
+            state.players.push(t("botPlayer") + " " + (i + 1));
+        } else {
+            const input = $("name-" + i) as HTMLInputElement | null;
+            state.players.push(input && input.value.trim() ? input.value.trim() : t("defaultPlayer") + " " + (i + 1));
+        }
     }
     state.hintsOn = ($("hints-check") as HTMLInputElement | null)?.checked ?? true;
 
@@ -248,4 +283,8 @@ export function startGame(): void {
     const revealBtn = $("reveal-btn");
     if (revealBtn) revealBtn.classList.add("hidden");
     setVoiceStatus(t("statusReady"), "", "statusReady");
+
+    if (isAllBots(state.botPlayers)) {
+        startAutoPlay();
+    }
 }

@@ -15,6 +15,9 @@ export interface GameState {
     confettiId: number | null;
     pendingChar: string | null;
     pendingSelections: Record<number, { pi?: number; r: number; c: number }>;
+    // Bot players (local mode)
+    botPlayers: boolean[];
+    autoPlayTimerId: number | null;
     // Online mode
     gameType: "local" | "online";
     onlineRole: "create" | "join";
@@ -61,6 +64,8 @@ function createInitialState(): GameState {
         confettiId: null,
         pendingChar: null,
         pendingSelections: {},
+        botPlayers: [],
+        autoPlayTimerId: null,
         gameType: "local",
         onlineRole: "create",
         role: null,
