@@ -10,10 +10,10 @@
     "@thai-bingo/shared": "*"
   },
   "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "^0.12.10",
+    "@cloudflare/vitest-pool-workers": "^0.12.12",
     "@cloudflare/workers-types": "^4.20241205.0",
     "typescript": "^5.7.0",
     "vitest": "^3.0.0",
-    "wrangler": "^4.63.0"
+    "wrangler": "^4.65.0"
   }
 }
