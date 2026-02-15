@@ -38,7 +38,8 @@
     .cell { font-size: min(1rem, 4.5cqi); }
 }
 @media (max-width: 600px) {
-    .setup-container { padding: 24px; }
+    .setup-container { padding: 24px; display: flex; flex-direction: column; }
+    .setup-container .lang-toggle { position: static; align-self: flex-end; margin-bottom: -8px; }
     .setup-container h1 { font-size: 1.6rem; }
     .board-card { min-width: 220px; }
     .players-1 .board-card, .players-2 .board-card, .players-3 .board-card, .players-4 .board-card { width: 100%; max-width: 360px; }
