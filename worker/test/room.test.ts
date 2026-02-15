@@ -239,8 +239,7 @@ describe("BingoRoom", () => {
         role: "moderator",
         id: moderatorId,
       });
-      // Only 1 player (need 2 when moderator not playing)
-      const { ws: p1Ws } = await connectWs(stub, { role: "player", id: "p1", name: "Alice" });
+      // No players at all (need at least 1 when moderator not playing)
       await tick();
 
       modWs.send(JSON.stringify({ type: "start" }));
@@ -250,7 +249,6 @@ describe("BingoRoom", () => {
       expect(errors.some((e) => (e.message as string).includes("Not enough players"))).toBe(true);
 
       modWs.close();
-      p1Ws.close();
     });
   });
 

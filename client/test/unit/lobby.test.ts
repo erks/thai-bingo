@@ -145,10 +145,9 @@ describe("lobby sync", () => {
         expect(startBtn.disabled).toBe(true);
     });
 
-    it("start button enabled with enough players", () => {
+    it("start button enabled with 1 player", () => {
         state.onlinePlayers = [
             { id: "p1", name: "Alice", connected: true },
-            { id: "p2", name: "Bob", connected: true },
         ];
         showLobby();
 

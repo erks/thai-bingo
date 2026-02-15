@@ -138,7 +138,7 @@ export function renderLobbyPlayers(): void {
 
     if (state.role === "moderator") {
         const startBtn = $("lobby-start-btn") as HTMLButtonElement | null;
-        const minNeeded = state.moderatorPlaying ? 1 : 2;
+        const minNeeded = 1;
         if (startBtn) startBtn.disabled = count < minNeeded;
     }
 }

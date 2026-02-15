@@ -28,9 +28,6 @@ export const CONFIG = {
 
   // --- Players ---
 
-  /** Minimum players required to start (when moderator is NOT playing). */
-  minPlayersDefault: 2,
-
-  /** Minimum players required to start (when moderator IS playing). */
-  minPlayersModeratorPlaying: 1,
+  /** Minimum players required to start a game. */
+  minPlayers: 1,
 };

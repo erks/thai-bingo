@@ -269,8 +269,7 @@ export class BingoRoom implements DurableObject {
       this.room.moderatorPlaying = moderatorPlaying;
     }
 
-    const minPlayers = this.room.moderatorPlaying ? CONFIG.minPlayersModeratorPlaying : CONFIG.minPlayersDefault;
-    if (this.room.players.length < minPlayers) {
+    if (this.room.players.length < CONFIG.minPlayers) {
       this.sendToId(senderId, { type: "error", message: "Not enough players" });
       return;
     }
