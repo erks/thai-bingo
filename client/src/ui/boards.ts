@@ -8,6 +8,19 @@ export function isVowel(ch: string): boolean {
     return VOWELS.includes(ch);
 }
 
+export function applyDisconnectedBadge(card: Element, header: Element, disconnected: boolean): void {
+    card.classList.toggle("disconnected", disconnected);
+    const existing = header.querySelector(".disconnected-badge");
+    if (disconnected && !existing) {
+        const badge = document.createElement("span");
+        badge.className = "disconnected-badge";
+        badge.textContent = t("playerDisconnected");
+        header.appendChild(badge);
+    } else if (!disconnected && existing) {
+        existing.remove();
+    }
+}
+
 export function renderGame(): void {
     const totalCount = $("total-count");
     if (totalCount) totalCount.textContent = String(state.gamePool.length);
@@ -80,11 +93,7 @@ export function renderBoards(): void {
             const playerId = state._boardIdMap[pi];
             const player = playerId ? state.onlinePlayers.find(p => p.id === playerId) : null;
             if (player && player.connected === false) {
-                card.classList.add("disconnected");
-                const badge = document.createElement("span");
-                badge.className = "disconnected-badge";
-                badge.textContent = t("playerDisconnected");
-                header.appendChild(badge);
+                applyDisconnectedBadge(card, header, true);
             }
         }
 

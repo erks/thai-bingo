@@ -3,7 +3,7 @@ import { t } from "../i18n/i18n";
 import { ensureAudio, sfxCall, sfxMark, sfxWrong, sfxWin, sfxReady, sfxAllReady } from "../audio/audio";
 import { speakChar, stopCharVoiceover } from "../audio/speech";
 import { $ } from "../ui/dom";
-import { renderGame, renderCalledHistory, updateHints } from "../ui/boards";
+import { renderGame, renderCalledHistory, updateHints, applyDisconnectedBadge } from "../ui/boards";
 import { showLobby, renderLobbyPlayers, stopLobbySync } from "../ui/lobby";
 import {
     renderOnlineStatusBanner, renderReadyButton, renderPlayerReplayButton,
@@ -117,19 +117,8 @@ function markPlayerConnection(playerId: string, connected: boolean): void {
     // Update board card during gameplay
     const card = document.querySelector(`.board-card[data-player-id="${playerId}"]`);
     if (card) {
-        card.classList.toggle("disconnected", !connected);
         const header = card.querySelector(".board-header");
-        if (header) {
-            const existing = header.querySelector(".disconnected-badge");
-            if (!connected && !existing) {
-                const badge = document.createElement("span");
-                badge.className = "disconnected-badge";
-                badge.textContent = t("playerDisconnected");
-                header.appendChild(badge);
-            } else if (connected && existing) {
-                existing.remove();
-            }
-        }
+        if (header) applyDisconnectedBadge(card, header, !connected);
     }
 
     // Refresh ready count (total changes when a player disconnects/reconnects)
