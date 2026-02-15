@@ -189,6 +189,8 @@ Client tests live in `client/test/` and use Vitest with jsdom environment.
 
 ### Test-Driven Development (TDD)
 
+**Every code change must include tests.** Do not submit implementation without corresponding test additions or updates. This is not optional — tests are part of the deliverable, not a follow-up.
+
 For all non-UI changes (shared logic, worker logic, utilities, game rules, message handling), follow TDD:
 
 1. **Write the test first.** Define the expected behavior in a test before writing the implementation. The test should fail initially.

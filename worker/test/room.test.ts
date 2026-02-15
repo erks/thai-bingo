@@ -666,10 +666,12 @@ describe("BingoRoom", () => {
       const ran = await runDurableObjectAlarm(stub);
       expect(ran).toBe(true);
 
-      // Verify room is cleaned up
+      // Verify room and alarm are both cleaned up
       await runInDurableObject(stub, async (instance, state) => {
         const room = await state.storage.get("room");
         expect(room).toBeUndefined();
+        const alarm = await state.storage.getAlarm();
+        expect(alarm).toBeNull();
       });
     });
 
@@ -686,6 +688,52 @@ describe("BingoRoom", () => {
       await runInDurableObject(stub, async (instance, state) => {
         const room = await state.storage.get("room");
         expect(room).toBeDefined();
+      });
+
+      modWs.close();
+    });
+
+    it("re-sets hard ceiling alarm when room survives", async () => {
+      const { moderatorId } = await initRoom(stub);
+      const { ws: modWs } = await connectWs(stub, { role: "moderator", id: moderatorId });
+      await tick();
+
+      // Fire alarm early (e.g. from a disconnect). Room survives because sockets connected + age < max.
+      await runDurableObjectAlarm(stub);
+
+      // The alarm handler should have re-set the alarm so the room doesn't live forever.
+      await runInDurableObject(stub, async (_instance, state) => {
+        const alarm = await state.storage.getAlarm();
+        expect(alarm).not.toBeNull();
+      });
+
+      modWs.close();
+    });
+
+    it("disconnect alarm does not exceed hard ceiling", async () => {
+      const { moderatorId } = await initRoom(stub);
+
+      // Read the createdAt timestamp
+      let createdAt!: number;
+      await runInDurableObject(stub, async (_instance, state) => {
+        const room = await state.storage.get<{ createdAt: number }>("room");
+        createdAt = room!.createdAt;
+      });
+
+      const { ws: modWs } = await connectWs(stub, { role: "moderator", id: moderatorId });
+      const { ws: p1Ws } = await connectWs(stub, { role: "player", id: "p1", name: "Alice" });
+      await tick();
+
+      // Simulate disconnect — triggers cleanup alarm
+      p1Ws.close();
+      await tick();
+
+      // The alarm should be <= createdAt + roomMaxLifetimeMs
+      const hardDeadline = createdAt + 2 * 60 * 60 * 1000;
+      await runInDurableObject(stub, async (_instance, state) => {
+        const alarm = await state.storage.getAlarm();
+        expect(alarm).not.toBeNull();
+        expect(alarm).toBeLessThanOrEqual(hardDeadline);
       });
 
       modWs.close();
@@ -1079,6 +1127,14 @@ describe("BingoRoom", () => {
       // Players should receive room_closed
       const closed = ofType(p1Msgs, "room_closed");
       expect(closed).toHaveLength(1);
+
+      // Room and alarm should both be cleaned up
+      await runInDurableObject(stub, async (_instance, state) => {
+        const room = await state.storage.get("room");
+        expect(room).toBeUndefined();
+        const alarm = await state.storage.getAlarm();
+        expect(alarm).toBeNull();
+      });
     });
 
     it("non-moderator close_room is ignored", async () => {

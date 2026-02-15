@@ -217,7 +217,10 @@ export class BingoRoom implements DurableObject {
       }
     }
     // Schedule cleanup check — any disconnect could mean everyone left
-    await this.state.storage.setAlarm(Date.now() + CONFIG.disconnectCleanupDelayMs);
+    // Use min() so the disconnect alarm never pushes past the hard ceiling
+    const hardDeadline = this.room.createdAt + CONFIG.roomMaxLifetimeMs;
+    const cleanupTime = Math.min(Date.now() + CONFIG.disconnectCleanupDelayMs, hardDeadline);
+    await this.state.storage.setAlarm(cleanupTime);
   }
 
   async webSocketError(ws: WebSocket, error: unknown): Promise<void> {
@@ -235,7 +238,11 @@ export class BingoRoom implements DurableObject {
         try { ws.close(1000, "room expired"); } catch {}
       }
       this.room = null;
+      await this.state.storage.deleteAlarm();
       await this.state.storage.deleteAll();
+    } else if (this.room) {
+      // Room survived — re-set the hard ceiling alarm
+      await this.state.storage.setAlarm(this.room.createdAt + CONFIG.roomMaxLifetimeMs);
     }
   }
 
@@ -495,6 +502,7 @@ export class BingoRoom implements DurableObject {
       try { ws.close(1000, "room closed"); } catch { /* already closed */ }
     }
     this.room = null;
+    await this.state.storage.deleteAlarm();
     await this.state.storage.deleteAll();
   }
 
