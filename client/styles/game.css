@@ -111,7 +111,7 @@
 .cell {
     aspect-ratio: 1; border-radius: 8px; border: 2px solid #e5e7eb;
     display: flex; align-items: center; justify-content: center;
-    font-size: min(1.15rem, 4.5cqi); font-weight: 700; cursor: pointer;
+    font-size: min(1.15rem, 5.5cqi); font-weight: 700; cursor: pointer;
     transition: all 0.15s; position: relative; background: white;
     user-select: none; -webkit-user-select: none; line-height: 1.1;
     white-space: nowrap; overflow: hidden;
