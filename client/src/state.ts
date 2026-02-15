@@ -35,6 +35,7 @@ export interface GameState {
     // Internal
     _joinName?: string;
     _wsConnecting?: boolean;
+    _joinPending?: boolean;
     _wsSendQueue?: Array<Record<string, unknown>>;
     _boardIdMap: Record<number, string>;
     _boardIndexMap: Record<string, number>;

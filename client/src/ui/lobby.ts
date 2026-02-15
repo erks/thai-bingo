@@ -94,7 +94,13 @@ export function renderLobbyPlayers(): void {
     if (!list) return;
     list.innerHTML = "";
 
-    state.onlinePlayers.forEach((p, i) => {
+    // Build display list: include moderator at top if they're not already in onlinePlayers
+    const displayPlayers = [...state.onlinePlayers];
+    if (state.role === "moderator" && state.playerId && !displayPlayers.some(p => p.id === state.playerId)) {
+        displayPlayers.unshift({ id: state.playerId, name: state._joinName || t("defaultPlayer"), connected: true });
+    }
+
+    displayPlayers.forEach((p, i) => {
         const item = document.createElement("div");
         item.className = "player-list-item";
 

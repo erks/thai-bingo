@@ -13,6 +13,7 @@ import {
 import { setVoiceStatus } from "../game/caller";
 import { startConfetti } from "../game/confetti";
 import { leaveToSetup } from "../game/win";
+import { initSetup, showRoomCodeError } from "../ui/setup";
 import { buildOnlineSession, saveSession, clearSession } from "../session";
 
 export function handleServerMessage(msg: Record<string, unknown>): void {
@@ -21,6 +22,7 @@ export function handleServerMessage(msg: Record<string, unknown>): void {
             state.playerId = msg.playerId as string;
             state.onlinePlayers = (msg.players as Array<{ id: string; name: string; connected: boolean }>) || [];
             state.onlinePhase = (msg.phase as "lobby" | "playing") || "lobby";
+            state._joinPending = false;
             renderLobbyPlayers();
             const onlineSession = buildOnlineSession(state);
             if (onlineSession) saveSession(onlineSession);
@@ -99,10 +101,10 @@ export function handleServerMessage(msg: Record<string, unknown>): void {
 
         case "error":
             if (msg.code === "room_not_found" || (msg.message as string)?.includes("not found")) {
-                clearSession();
-                state.roomCode = null;
+                returnToJoinWithError(state.roomCode || "");
+            } else {
+                alert(msg.message);
             }
-            alert(msg.message);
             break;
     }
 }
@@ -380,4 +382,47 @@ function onlineWin(msg: Record<string, unknown>): void {
         if (overlay) overlay.classList.remove("hidden");
         startConfetti();
     }, 500);
+}
+
+function returnToJoinWithError(roomCode: string): void {
+    // Guard: don't run twice (onmessage + onclose can both trigger this)
+    if (!state.role) return;
+
+    clearSession();
+    stopLobbySync();
+
+    // Detach onclose before closing so it doesn't show the reconnecting
+    // banner or schedule a reconnect attempt.
+    if (state.ws) {
+        state.ws.onclose = null;
+        state.ws.close();
+        state.ws = null;
+    }
+
+    // Set join form state so user can correct the code
+    state.gameType = "online";
+    state.onlineRole = "join";
+    state.roomCode = roomCode;
+    state.role = null;
+    state.onlinePhase = null;
+
+    const banner = $("connection-status");
+    if (banner) banner.classList.add("hidden");
+
+    const lobbyScreen = $("lobby-screen");
+    if (lobbyScreen) lobbyScreen.classList.add("hidden");
+    const setupScreen = $("setup-screen");
+    if (setupScreen) setupScreen.classList.remove("hidden");
+
+    initSetup();
+
+    if (location.pathname !== "/") {
+        history.pushState(null, "", "/");
+    }
+
+    // Show error on room code input after DOM renders (initSetup uses setTimeout for prefill)
+    setTimeout(() => {
+        const codeInput = $("join-room-code") as HTMLInputElement | null;
+        if (codeInput) showRoomCodeError(codeInput, t("errorRoomNotFound"));
+    }, 0);
 }

@@ -85,3 +85,9 @@
     font-family: monospace !important; font-size: 1.8rem !important; font-weight: 900 !important;
     text-align: center !important; letter-spacing: 0.15em !important; text-transform: uppercase;
 }
+.room-code-input.error { border-color: #ef4444; }
+.room-code-input.error:focus { border-color: #ef4444; }
+.room-code-error {
+    color: #ef4444; font-size: 0.85rem; font-weight: 600;
+    margin-top: 6px; text-align: center;
+}

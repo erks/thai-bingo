@@ -1,5 +1,6 @@
 import { VOWELS } from "@thai-bingo/shared";
 import { state } from "../state";
+import { t } from "../i18n/i18n";
 import { $ } from "./dom";
 import { markCell } from "../game/marking";
 
@@ -73,6 +74,19 @@ export function renderBoards(): void {
         header.className = "board-header";
         header.textContent = state.players[pi] + (state.botPlayers[pi] ? " \uD83E\uDD16" : "");
         card.appendChild(header);
+
+        // Apply disconnected state from player connection status
+        if (isOnline && state._boardIdMap) {
+            const playerId = state._boardIdMap[pi];
+            const player = playerId ? state.onlinePlayers.find(p => p.id === playerId) : null;
+            if (player && player.connected === false) {
+                card.classList.add("disconnected");
+                const badge = document.createElement("span");
+                badge.className = "disconnected-badge";
+                badge.textContent = t("playerDisconnected");
+                header.appendChild(badge);
+            }
+        }
 
         const grid = document.createElement("div");
         grid.className = "board-grid";

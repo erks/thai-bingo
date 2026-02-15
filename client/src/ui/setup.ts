@@ -243,6 +243,9 @@ export function renderOnlineSetup(): void {
         codeInput.maxLength = 6;
         codeInput.addEventListener("input", () => {
             codeInput.value = codeInput.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+            codeInput.classList.remove("error");
+            const errMsg = codeInput.parentElement?.querySelector(".room-code-error");
+            if (errMsg) errMsg.remove();
         });
         codeDiv.appendChild(codeInput);
         section.appendChild(codeDiv);
@@ -341,4 +344,15 @@ export function startGame(): void {
     if (isAllBots(state.botPlayers)) {
         startAutoPlay();
     }
+}
+
+export function showRoomCodeError(input: HTMLInputElement, message: string): void {
+    input.classList.add("error");
+    // Remove existing error message if any
+    const existing = input.parentElement?.querySelector(".room-code-error");
+    if (existing) existing.remove();
+    const errMsg = document.createElement("div");
+    errMsg.className = "room-code-error";
+    errMsg.textContent = message;
+    input.insertAdjacentElement("afterend", errMsg);
 }

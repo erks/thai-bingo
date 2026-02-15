@@ -4,6 +4,7 @@ import { API_BASE } from "../config";
 import { $ } from "../ui/dom";
 import { connectWebSocket } from "./connection";
 import { showLobby } from "../ui/lobby";
+import { showRoomCodeError } from "../ui/setup";
 import { buildOnlineSession, saveSession } from "../session";
 
 export async function createRoom(): Promise<void> {
@@ -43,15 +44,20 @@ export async function createRoom(): Promise<void> {
 }
 
 export function joinRoom(): void {
-    const code = ($("join-room-code") as HTMLInputElement | null)?.value.trim().toUpperCase();
+    const codeInput = $("join-room-code") as HTMLInputElement | null;
+    const code = codeInput?.value.trim().toUpperCase();
     const name = ($("join-player-name") as HTMLInputElement | null)?.value.trim() || t("defaultPlayer");
-    if (!code || code.length !== 6) return;
+    if (!code || code.length !== 6) {
+        if (codeInput) showRoomCodeError(codeInput, t("errorRoomNotFound"));
+        return;
+    }
 
     state.roomCode = code;
     state.playerId = Math.random().toString(36).slice(2, 10);
     state.role = "player";
     state.onlinePhase = "lobby";
     state._joinName = name;
+    state._joinPending = true;
 
     history.pushState(null, "", "/rooms/" + code);
     const session = buildOnlineSession(state);

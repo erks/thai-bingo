@@ -31,14 +31,22 @@ export function connectWebSocket(): void {
         handleServerMessage(msg);
     };
 
-    ws.onclose = () => {
-        console.log("[ws] disconnected");
+    ws.onclose = (event) => {
+        console.log("[ws] disconnected", event.code);
         state.ws = null;
         state._wsConnecting = false;
+
+        // If join was never confirmed, treat any close as room-not-found
+        if (state._joinPending) {
+            state._joinPending = false;
+            handleServerMessage({ type: "error", message: "Room not found", code: "room_not_found" });
+            return;
+        }
+
         updateConnectionStatus(false);
-        if (state.gameType === "online" && state.roomCode) {
+        if (state.gameType === "online" && state.roomCode && state.role) {
             setTimeout(() => {
-                if (state.gameType === "online" && !state.ws && !state._wsConnecting) {
+                if (state.gameType === "online" && state.role && !state.ws && !state._wsConnecting) {
                     connectWebSocket();
                 }
             }, 1000);

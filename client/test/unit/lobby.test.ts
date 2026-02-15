@@ -102,7 +102,7 @@ describe("lobby sync", () => {
         }
     });
 
-    it("renderLobbyPlayers shows correct player count", () => {
+    it("renderLobbyPlayers shows correct player count including moderator", () => {
         state.onlinePlayers = [
             { id: "p1", name: "Alice", connected: true },
             { id: "p2", name: "Bob", connected: true },
@@ -112,7 +112,10 @@ describe("lobby sync", () => {
 
         const list = document.getElementById("lobby-player-list")!;
         const items = list.querySelectorAll(".player-list-item");
-        expect(items).toHaveLength(3);
+        // 3 players + 1 moderator (mod1) inserted at top
+        expect(items).toHaveLength(4);
+        // Moderator appears first with "you" badge
+        expect(items[0].querySelector(".you-badge")).not.toBeNull();
     });
 
     it("renderLobbyPlayers shows disconnected player with offline dot", () => {
@@ -124,11 +127,14 @@ describe("lobby sync", () => {
 
         const list = document.getElementById("lobby-player-list")!;
         const items = list.querySelectorAll(".player-list-item");
-        expect(items).toHaveLength(2);
+        // 2 players + 1 moderator
+        expect(items).toHaveLength(3);
 
         const dots = list.querySelectorAll(".connection-dot");
+        // dots[0] = moderator (online), dots[1] = Alice (online), dots[2] = Bob (offline)
         expect(dots[0].classList.contains("online")).toBe(true);
-        expect(dots[1].classList.contains("offline")).toBe(true);
+        expect(dots[1].classList.contains("online")).toBe(true);
+        expect(dots[2].classList.contains("offline")).toBe(true);
     });
 
     it("start button disabled when not enough players", () => {
