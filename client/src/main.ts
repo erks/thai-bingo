@@ -20,16 +20,24 @@ import { randomizeChar, replayChar, revealChar } from "./game/caller";
 import { continueAfterWin, resetGame, backToSetup } from "./game/win";
 import { ensureAudio } from "./audio/audio";
 import { warmupVoiceover } from "./audio/speech";
+import { tryRestoreSession } from "./restore";
 
 // ============================================================
 // INIT
 // ============================================================
 
-// Auto-switch to online join mode if ?room= is in URL
+// Legacy ?room=CODE links → redirect to /rooms/CODE
 const urlRoom = new URLSearchParams(location.search).get("room");
 if (urlRoom) {
+  history.replaceState(null, "", "/rooms/" + urlRoom.toUpperCase());
+}
+
+// Pre-set join state from URL path so initSetup() renders the online join form
+const roomMatch = location.pathname.match(/^\/rooms\/([A-Z0-9]{4,8})$/i);
+if (roomMatch && roomMatch[1].toLowerCase() !== "local") {
   state.gameType = "online";
   state.onlineRole = "join";
+  state.roomCode = roomMatch[1].toUpperCase();
 }
 
 // Wire up event listeners (replacing inline onclick)
@@ -57,6 +65,26 @@ document.querySelectorAll('[data-version-footer]').forEach(el => {
 
 // Apply language and render setup
 applyLang();
+
+// Restore session from URL (must run after applyLang so i18n is ready)
+tryRestoreSession();
+
+// Handle browser back/forward navigation
+window.addEventListener("popstate", () => {
+  if (location.pathname === "/" || location.pathname === "") {
+    // Remember the room path so we can restore it if user cancels
+    const roomPath = state.roomCode
+      ? "/rooms/" + state.roomCode
+      : state.gameType === "local" && state.boards.length > 0
+        ? "/rooms/local"
+        : null;
+    backToSetup();
+    // If backToSetup was cancelled (online confirm dialog), restore the URL
+    if (roomPath && state.roomCode) {
+      history.pushState(null, "", roomPath);
+    }
+  }
+});
 
 // Unlock audio on first user interaction (required for mobile browsers).
 // Mobile Safari and Chrome require a user gesture to "bless" audio playback.

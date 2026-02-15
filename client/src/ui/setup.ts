@@ -8,6 +8,7 @@ import { renderGame } from "./boards";
 import { setVoiceStatus } from "../game/caller";
 import { isAllBots, startAutoPlay } from "../game/bot";
 import { generateRandomName } from "../game/names";
+import { buildLocalSession, saveSession } from "../session";
 
 export function initSetup(): void {
     // --- Game type toggle ---
@@ -246,11 +247,13 @@ export function renderOnlineSetup(): void {
         codeDiv.appendChild(codeInput);
         section.appendChild(codeDiv);
 
-        const urlRoom = new URLSearchParams(location.search).get("room");
-        if (urlRoom) {
+        // Pre-fill room code from URL (/rooms/CODE or legacy ?room=CODE)
+        const prefillCode = state.roomCode
+            || new URLSearchParams(location.search).get("room")?.toUpperCase();
+        if (prefillCode) {
             setTimeout(() => {
                 const el = $("join-room-code") as HTMLInputElement | null;
-                if (el && !el.value) el.value = urlRoom.toUpperCase();
+                if (el && !el.value) el.value = prefillCode;
             }, 0);
         }
 
@@ -330,6 +333,10 @@ export function startGame(): void {
     const revealBtn = $("reveal-btn");
     if (revealBtn) revealBtn.classList.add("hidden");
     setVoiceStatus(t("statusReady"), "", "statusReady");
+
+    history.pushState(null, "", "/rooms/local");
+    const session = buildLocalSession(state);
+    if (session) saveSession(session);
 
     if (isAllBots(state.botPlayers)) {
         startAutoPlay();

@@ -7,5 +7,11 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     include: ["test/**/*.test.ts"],
+    pool: "forks",
+    poolOptions: {
+      forks: {
+        execArgv: ["--no-warnings"],
+      },
+    },
   },
 });

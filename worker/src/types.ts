@@ -38,4 +38,5 @@ export type ClientMessage =
   | { type: "select"; r: number; c: number }
   | { type: "mark"; r: number; c: number }
   | { type: "ready" }
-  | { type: "sync" };
+  | { type: "sync" }
+  | { type: "close_room" };

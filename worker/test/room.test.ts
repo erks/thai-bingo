@@ -1062,4 +1062,42 @@ describe("BingoRoom", () => {
       p2Ws.close();
     });
   });
+
+  describe("close_room", () => {
+    it("moderator close_room broadcasts room_closed to all players", async () => {
+      const { moderatorId } = await initRoom(stub);
+      const { ws: modWs, messages: modMsgs } = await connectWs(stub, { role: "moderator", id: moderatorId });
+      await tick();
+
+      const { ws: p1Ws, messages: p1Msgs } = await connectWs(stub, { role: "player", id: "p1", name: "Alice" });
+      await tick();
+
+      // Moderator closes the room
+      modWs.send(JSON.stringify({ type: "close_room" }));
+      await tick(200);
+
+      // Players should receive room_closed
+      const closed = ofType(p1Msgs, "room_closed");
+      expect(closed).toHaveLength(1);
+    });
+
+    it("non-moderator close_room is ignored", async () => {
+      const { moderatorId } = await initRoom(stub);
+      const { ws: modWs, messages: modMsgs } = await connectWs(stub, { role: "moderator", id: moderatorId });
+      await tick();
+
+      const { ws: p1Ws, messages: p1Msgs } = await connectWs(stub, { role: "player", id: "p1", name: "Alice" });
+      await tick();
+
+      // Player tries to close the room — should be ignored
+      p1Ws.send(JSON.stringify({ type: "close_room" }));
+      await tick(200);
+
+      const closed = ofType(modMsgs, "room_closed");
+      expect(closed).toHaveLength(0);
+
+      modWs.close();
+      p1Ws.close();
+    });
+  });
 });

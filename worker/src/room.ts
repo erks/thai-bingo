@@ -192,6 +192,9 @@ export class BingoRoom implements DurableObject {
           moderatorPlaying: this.room.moderatorPlaying,
         });
         break;
+      case "close_room":
+        await this.handleCloseRoom(senderId, senderRole);
+        break;
     }
   }
 
@@ -480,6 +483,19 @@ export class BingoRoom implements DurableObject {
     if (!this.room.winners.includes(senderId)) {
       this.checkAndBroadcastWin(senderId);
     }
+  }
+
+  private async handleCloseRoom(senderId: string, senderRole: string): Promise<void> {
+    if (!this.room) return;
+    if (senderRole !== "moderator" || senderId !== this.room.moderatorId) return;
+    console.log(`[room:${this.room.code}] moderator closed room`);
+    this.broadcast({ type: "room_closed" });
+    // Close all WebSocket connections
+    for (const ws of this.state.getWebSockets()) {
+      try { ws.close(1000, "room closed"); } catch { /* already closed */ }
+    }
+    this.room = null;
+    await this.state.storage.deleteAll();
   }
 
   private checkAndBroadcastWin(playerId: string): void {

@@ -114,7 +114,8 @@ export function updateModeratorReadyInfo(): void {
         const voicePanel = document.querySelector(".voice-panel");
         if (voicePanel) voicePanel.appendChild(info);
     }
-    const totalParticipants = state.onlinePlayers.length - (state.moderatorPlaying ? 1 : 0);
+    const connectedPlayers = state.onlinePlayers.filter(p => p.connected !== false);
+    const totalParticipants = connectedPlayers.length - (state.moderatorPlaying ? 1 : 0);
     const n = state.pendingReadyIds.length;
     const allReady = n === totalParticipants && totalParticipants > 0;
     info.textContent = allReady

@@ -30,7 +30,7 @@ export function showLobby(): void {
         if (title) title.textContent = t("yourRoom");
         if (subtitle) subtitle.textContent = t("waitingForPlayers");
         if (shareRow) shareRow.classList.remove("hidden");
-        const shareUrl = location.origin + location.pathname + "?room=" + state.roomCode;
+        const shareUrl = location.origin + "/rooms/" + state.roomCode;
         const shareInput = $("share-link-input") as HTMLInputElement | null;
         if (shareInput) shareInput.value = shareUrl;
         const copyBtn = $("copy-link-btn");

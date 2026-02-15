@@ -6,6 +6,7 @@ import { $ } from "../ui/dom";
 import { wsSend } from "../ws/connection";
 import { highlightWinLine } from "../ui/dom";
 import { showWin } from "./win";
+import { saveLocalIfActive } from "../session";
 
 export function markCell(pi: number, r: number, c: number): void {
     if (!state.gameActive) return;
@@ -101,4 +102,5 @@ export function confirmMark(pi: number, r: number, c: number): void {
         highlightWinLine(pi, winLine);
         setTimeout(() => showWin(pi), 500);
     }
+    saveLocalIfActive();
 }

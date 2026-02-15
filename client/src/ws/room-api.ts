@@ -4,6 +4,7 @@ import { API_BASE } from "../config";
 import { $ } from "../ui/dom";
 import { connectWebSocket } from "./connection";
 import { showLobby } from "../ui/lobby";
+import { buildOnlineSession, saveSession } from "../session";
 
 export async function createRoom(): Promise<void> {
     const nameInput = $("moderator-name") as HTMLInputElement | null;
@@ -28,6 +29,11 @@ export async function createRoom(): Promise<void> {
         state.onlinePhase = "lobby";
         state.onlinePlayers = [];
         state.moderatorPlaying = false;
+        state._joinName = name;
+
+        history.pushState(null, "", "/rooms/" + data.room);
+        const session = buildOnlineSession(state);
+        if (session) saveSession(session);
 
         connectWebSocket();
         showLobby();
@@ -46,6 +52,10 @@ export function joinRoom(): void {
     state.role = "player";
     state.onlinePhase = "lobby";
     state._joinName = name;
+
+    history.pushState(null, "", "/rooms/" + code);
+    const session = buildOnlineSession(state);
+    if (session) saveSession(session);
 
     connectWebSocket();
     showLobby();

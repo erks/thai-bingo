@@ -13,7 +13,8 @@ export type StringKey =
     | "statusCharRevealed" | "readyBtn" | "readyStatus" | "playersReady" | "allReady"
     | "playerDisconnected" | "moderatorDisconnected" | "reconnecting"
     | "errorRoomNotFound" | "errorConnection" | "connecting"
-    | "botToggle" | "botPlayer" | "randomName";
+    | "botToggle" | "botPlayer" | "randomName"
+    | "confirmLeaveRoom" | "confirmLeaveRoomPlayer" | "roomClosed";
 
 export type StringMap = Record<StringKey, string>;
 
@@ -84,6 +85,9 @@ export const STRINGS: Record<string, StringMap> = {
         botToggle: 'สลับบอท',
         botPlayer: 'บอท',
         randomName: 'สุ่มชื่อ',
+        confirmLeaveRoom: 'ออกจากห้องหรือไม่? ผู้เล่นทุกคนจะถูกตัดการเชื่อมต่อ',
+        confirmLeaveRoomPlayer: 'ออกจากห้องหรือไม่?',
+        roomClosed: 'ผู้ดำเนินเกมปิดห้องแล้ว',
     },
     en: {
         title: 'Thai Alphabet Bingo',
@@ -151,6 +155,9 @@ export const STRINGS: Record<string, StringMap> = {
         botToggle: 'Toggle bot',
         botPlayer: 'Bot',
         randomName: 'Random name',
+        confirmLeaveRoom: 'Leave room? All players will be disconnected.',
+        confirmLeaveRoomPlayer: 'Leave room?',
+        roomClosed: 'The moderator has closed the room.',
     },
     ja: {
         title: 'タイ文字ビンゴ',
@@ -218,6 +225,9 @@ export const STRINGS: Record<string, StringMap> = {
         botToggle: 'ボット切替',
         botPlayer: 'ボット',
         randomName: 'ランダム名前',
+        confirmLeaveRoom: 'ルームを退出しますか？全プレイヤーが切断されます。',
+        confirmLeaveRoomPlayer: 'ルームを退出しますか？',
+        roomClosed: '司会者がルームを閉じました。',
     }
 };
 

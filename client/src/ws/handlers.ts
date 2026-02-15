@@ -12,15 +12,20 @@ import {
 } from "../ui/online-ui";
 import { setVoiceStatus } from "../game/caller";
 import { startConfetti } from "../game/confetti";
+import { leaveToSetup } from "../game/win";
+import { buildOnlineSession, saveSession, clearSession } from "../session";
 
 export function handleServerMessage(msg: Record<string, unknown>): void {
     switch (msg.type) {
-        case "joined":
+        case "joined": {
             state.playerId = msg.playerId as string;
             state.onlinePlayers = (msg.players as Array<{ id: string; name: string; connected: boolean }>) || [];
             state.onlinePhase = (msg.phase as "lobby" | "playing") || "lobby";
             renderLobbyPlayers();
+            const onlineSession = buildOnlineSession(state);
+            if (onlineSession) saveSession(onlineSession);
             break;
+        }
 
         case "player_joined":
             state.onlinePlayers = (msg.players as Array<{ id: string; name: string; connected: boolean }>) || [];
@@ -78,7 +83,8 @@ export function handleServerMessage(msg: Record<string, unknown>): void {
             updateReadyButton();
             updateReadyIndicators();
             if (state.role === "moderator") updateModeratorReadyInfo();
-            const totalParticipants = state.onlinePlayers.length - (state.moderatorPlaying ? 1 : 0);
+            const connectedPlayers = state.onlinePlayers.filter(p => p.connected !== false);
+            const totalParticipants = connectedPlayers.length - (state.moderatorPlaying ? 1 : 0);
             const allReady = state.pendingReadyIds.length === totalParticipants && totalParticipants > 0;
             if (state.pendingReadyIds.length > prevCount) {
                 if (allReady) sfxAllReady(); else sfxReady();
@@ -86,7 +92,16 @@ export function handleServerMessage(msg: Record<string, unknown>): void {
             break;
         }
 
+        case "room_closed":
+            alert(t("roomClosed"));
+            leaveToSetup();
+            break;
+
         case "error":
+            if (msg.code === "room_not_found" || (msg.message as string)?.includes("not found")) {
+                clearSession();
+                state.roomCode = null;
+            }
             alert(msg.message);
             break;
     }
@@ -96,6 +111,27 @@ function markPlayerConnection(playerId: string, connected: boolean): void {
     const p = state.onlinePlayers.find(p => p.id === playerId);
     if (p) p.connected = connected;
     renderLobbyPlayers();
+
+    // Update board card during gameplay
+    const card = document.querySelector(`.board-card[data-player-id="${playerId}"]`);
+    if (card) {
+        card.classList.toggle("disconnected", !connected);
+        const header = card.querySelector(".board-header");
+        if (header) {
+            const existing = header.querySelector(".disconnected-badge");
+            if (!connected && !existing) {
+                const badge = document.createElement("span");
+                badge.className = "disconnected-badge";
+                badge.textContent = t("playerDisconnected");
+                header.appendChild(badge);
+            } else if (connected && existing) {
+                existing.remove();
+            }
+        }
+    }
+
+    // Refresh ready count (total changes when a player disconnects/reconnects)
+    if (state.role === "moderator") updateModeratorReadyInfo();
 }
 
 function onlineGameStart(msg: Record<string, unknown>): void {

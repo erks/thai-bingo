@@ -7,6 +7,7 @@ import { wsSend } from "../ws/connection";
 import { renderCalledHistory, updateHints } from "../ui/boards";
 import { confirmMark } from "./marking";
 import { scheduleBotSelections, cancelBotSelections } from "./bot";
+import { saveLocalIfActive } from "../session";
 
 export function setVoiceStatus(text: string, type: string, i18nKey?: string): void {
     const el = $("voice-status");
@@ -50,6 +51,7 @@ export function randomizeChar(): void {
     const revealBtn = $("reveal-btn");
     if (revealBtn) revealBtn.classList.remove("hidden");
     setVoiceStatus(t("statusPending"), "", "statusPending");
+    saveLocalIfActive();
     scheduleBotSelections();
 }
 
@@ -109,6 +111,7 @@ export function revealChar(): void {
         if (randomBtn) randomBtn.disabled = true;
         setVoiceStatus(t("statusEmpty"), "", "statusEmpty");
     }
+    saveLocalIfActive();
 }
 
 export function callCharacter(char: string): void {

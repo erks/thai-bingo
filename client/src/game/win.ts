@@ -5,14 +5,16 @@ import { stopCharVoiceover } from "../audio/speech";
 import { $ } from "../ui/dom";
 import { startConfetti, stopConfetti } from "./confetti";
 import { wsSend } from "../ws/connection";
-import { startGame } from "../ui/setup";
+import { initSetup, startGame } from "../ui/setup";
 import { stopAutoPlay, startAutoPlay, isAllBots } from "./bot";
+import { clearSession, saveLocalIfActive } from "../session";
 
 export function showWin(pi: number): void {
     stopAutoPlay();
     sfxWin();
     state.gameActive = false;
     stopCharVoiceover();
+    saveLocalIfActive();
     const winnerName = $("winner-name");
     if (winnerName) winnerName.textContent = state.players[pi];
     const overlay = $("win-overlay");
@@ -25,6 +27,7 @@ export function continueAfterWin(): void {
     const overlay = $("win-overlay");
     if (overlay) overlay.classList.add("hidden");
     state.gameActive = true;
+    saveLocalIfActive();
     if (isAllBots(state.botPlayers)) {
         startAutoPlay();
     }
@@ -46,9 +49,23 @@ export function resetGame(): void {
 }
 
 export function backToSetup(): void {
+    if (state.gameType === "online" && state.roomCode) {
+        const msg = state.role === "moderator" ? t("confirmLeaveRoom") : t("confirmLeaveRoomPlayer");
+        if (!confirm(msg)) return;
+        // Moderator closing the room: notify server so all players are disconnected
+        if (state.role === "moderator") {
+            wsSend({ type: "close_room" });
+        }
+    }
+
+    leaveToSetup();
+}
+
+export function leaveToSetup(): void {
     stopAutoPlay();
     stopConfetti();
     stopCharVoiceover();
+    clearSession();
     if (state.ws) { state.ws.close(); state.ws = null; }
     state.gameType = "local";
     state.role = null;
@@ -67,4 +84,10 @@ export function backToSetup(): void {
     if (lobbyScreen) lobbyScreen.classList.add("hidden");
     const setupScreen = $("setup-screen");
     if (setupScreen) setupScreen.classList.remove("hidden");
+
+    initSetup();
+
+    if (location.pathname !== "/") {
+        history.pushState(null, "", "/");
+    }
 }
